@@ -29,9 +29,11 @@ export function TestControls() {
       <Button data-testid="force-gameover" size="small" variant="contained" color="warning" onClick={() => dispatch(endGame())}>
         Force Game Over
       </Button>
-      <Button data-testid="debug-set-t" size="small" variant="outlined" onClick={() => dispatch(debugSetActive({ type: "T" }))}>
-        Set piece T
-      </Button>
+      <Button data-testid="debug-set-t" size="small" variant="outlined" onClick={() => dispatch(debugSetActive({ type: "T" }))}>T</Button>
+      <Button data-testid="debug-set-s" size="small" variant="outlined" onClick={() => dispatch(debugSetActive({ type: "S" }))}>S</Button>
+      <Button data-testid="debug-set-z" size="small" variant="outlined" onClick={() => dispatch(debugSetActive({ type: "Z" }))}>Z</Button>
+      <Button data-testid="debug-set-l" size="small" variant="outlined" onClick={() => dispatch(debugSetActive({ type: "L" }))}>L</Button>
+      <Button data-testid="debug-set-j" size="small" variant="outlined" onClick={() => dispatch(debugSetActive({ type: "J" }))}>J</Button>
       <Typography data-testid="debug-rotation" variant="caption" sx={{ ml: 1 }}>
         rot={rotation ?? "-"} type={type ?? "-"}
       </Typography>
