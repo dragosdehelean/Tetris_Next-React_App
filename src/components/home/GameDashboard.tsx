@@ -17,6 +17,7 @@ import { THEME_NAMES, THEME_OPTIONS } from "@/features/theme/themeOptions";
 import { GameCanvas } from "@/components/game/GameCanvas";
 import { SettingsPanel } from "@/components/game/SettingsPanel";
 import { LeaderboardPanel } from "@/components/game/LeaderboardPanel";
+import { TestControls } from "@/components/test/TestControls";
 import { ControlsOverlay } from "@/components/game/ControlsOverlay";
 
 export function GameDashboard() {
@@ -84,6 +85,7 @@ export function GameDashboard() {
 
       <SettingsPanel />
       <LeaderboardPanel />
+      <TestControls />
     </Stack>
   );
 }

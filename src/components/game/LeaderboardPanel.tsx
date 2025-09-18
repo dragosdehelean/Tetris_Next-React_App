@@ -10,7 +10,7 @@ export function LeaderboardPanel() {
   const { data } = useGetScoresQuery(difficulty);
 
   return (
-    <Stack gap={1} sx={{ textAlign: "left" }}>
+    <Stack gap={1} sx={{ textAlign: "left" }} data-testid="leaderboard">
       <Typography variant="h6">Top scoruri ({difficulty})</Typography>
       <Stack component="ol" sx={{ m: 0, pl: 3 }}>
         {(data ?? []).length === 0 ? (
@@ -26,4 +26,3 @@ export function LeaderboardPanel() {
     </Stack>
   );
 }
-

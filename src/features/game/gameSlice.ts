@@ -113,6 +113,17 @@ export const gameSlice = createSlice({
       updateFrame(state, result.frame);
       if (result.lockedOut) state.status = "gameOver";
     },
+    // Debug/testing helper: adjust current frame score/lines/level for test-only flows
+    debugSetScore(state, action: PayloadAction<{ score?: number; linesCleared?: number; level?: number }>) {
+      if (!state.frame) return;
+      state.frame = {
+        ...state.frame,
+        score: action.payload.score ?? state.frame.score,
+        clearedLines: action.payload.linesCleared ?? state.frame.clearedLines,
+        level: action.payload.level ?? state.frame.level,
+      };
+      state.lastUpdate = Date.now();
+    },
     resetGameState() {
       return initialState;
     },
@@ -132,6 +143,7 @@ export const {
   rotateClockwise,
   rotateCounterClockwise,
   hold,
+  debugSetScore,
   resetGameState,
 } = gameSlice.actions;
 
