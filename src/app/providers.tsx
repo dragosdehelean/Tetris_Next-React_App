@@ -8,6 +8,7 @@ import { makeStore, type AppStore } from "@/features/store/store";
 import { useAppDispatch, useAppSelector } from "@/features/store/hooks";
 import { selectThemeName, setTheme } from "@/features/theme/themeSlice";
 import { DEFAULT_THEME, THEME_PALETTES, type ThemeName, isThemeName } from "@/features/theme/themeOptions";
+import { setGhostPiece, setMuted, setVolume } from "@/features/settings/settingsSlice";
 
 interface ProvidersProps {
   children: ReactNode;
@@ -61,6 +62,7 @@ function AppThemeProvider({ children }: { children: ReactNode }) {
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
       <ThemeSynchronizer themeName={themeName} />
+      <SettingsSynchronizer />
       {children}
     </ThemeProvider>
   );
@@ -137,5 +139,22 @@ function ThemeSynchronizer({ themeName }: { themeName: ThemeName }) {
     window.history.replaceState(null, "", next);
   }, [queryTheme, themeName]);
 
+  return null;
+}
+
+function SettingsSynchronizer() {
+  const dispatch = useAppDispatch();
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem("settings.volume");
+      if (v != null) dispatch(setVolume(Math.max(0, Math.min(1, Number(v)))));
+      const m = localStorage.getItem("settings.muted");
+      if (m != null) dispatch(setMuted(m === "true"));
+      const g = localStorage.getItem("settings.ghostPiece");
+      if (g != null) dispatch(setGhostPiece(g === "true"));
+    } catch {
+      // ignore
+    }
+  }, [dispatch]);
   return null;
 }

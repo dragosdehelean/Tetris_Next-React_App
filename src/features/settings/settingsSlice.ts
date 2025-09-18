@@ -33,16 +33,9 @@ const initialState: SettingsState = {
   ghostPiece: true,
 };
 
-const persistedInitial: SettingsState = {
-  volume: typeof window === "undefined" ? initialState.volume : readNumber("settings.volume", initialState.volume),
-  muted: typeof window === "undefined" ? initialState.muted : readBool("settings.muted", initialState.muted),
-  ghostPiece:
-    typeof window === "undefined" ? initialState.ghostPiece : readBool("settings.ghostPiece", initialState.ghostPiece),
-};
-
 export const settingsSlice = createSlice({
   name: "settings",
-  initialState: persistedInitial,
+  initialState,
   reducers: {
     setVolume(state, action: PayloadAction<number>) {
       const v = Math.max(0, Math.min(1, action.payload));
@@ -73,4 +66,3 @@ export const selectSettings = (state: { settings: SettingsState }) => state.sett
 export const selectVolume = (state: { settings: SettingsState }) => state.settings.volume;
 export const selectMuted = (state: { settings: SettingsState }) => state.settings.muted;
 export const selectGhostPiece = (state: { settings: SettingsState }) => state.settings.ghostPiece;
-
