@@ -1,46 +1,55 @@
 ﻿import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-
-export type Difficulty = "Relaxed" | "Classic" | "Expert";
-export type GameStatus = "idle" | "running" | "paused" | "gameOver";
+import { hardDrop as engineHardDrop, holdPiece, initializeFrame, movePiece, rotateActive, softDrop as engineSoftDrop, tickFrame } from "@/features/game/engine/gameEngine";
+import type { GameFrameState } from "@/features/game/engine/state";
+import { createSeed } from "@/features/game/engine/prng";
+import type { Difficulty, GameStatus } from "@/features/game/types";
+import { difficultyLevelBoost } from "@/features/game/types";
 
 export interface GameState {
   status: GameStatus;
-  score: number;
-  linesCleared: number;
-  level: number;
   difficulty: Difficulty;
-  startTime: number | null;
-  lastTick: number | null;
+  frame: GameFrameState | null;
+  seed: number;
+  lastUpdate: number;
 }
+
+const initialSeed = createSeed();
 
 const initialState: GameState = {
   status: "idle",
-  score: 0,
-  linesCleared: 0,
-  level: 1,
   difficulty: "Classic",
-  startTime: null,
-  lastTick: null,
+  frame: null,
+  seed: initialSeed,
+  lastUpdate: 0,
 };
 
-const difficultyLevelBoost: Record<Difficulty, number> = {
-  Relaxed: 1,
-  Classic: 2,
-  Expert: 3,
+interface StartPayload {
+  difficulty?: Difficulty;
+  timestamp?: number;
+  seed?: number;
+}
+
+interface TickPayload {
+  elapsed: number;
+}
+
+const updateFrame = (state: GameState, frame: GameFrameState) => {
+  state.frame = frame;
+  state.lastUpdate = Date.now();
 };
 
 export const gameSlice = createSlice({
   name: "game",
   initialState,
   reducers: {
-    startGame(state, action: PayloadAction<{ difficulty?: Difficulty; timestamp?: number } | undefined>) {
-      state.status = "running";
-      state.difficulty = action.payload?.difficulty ?? state.difficulty;
-      state.score = 0;
-      state.linesCleared = 0;
-      state.level = 1;
-      state.startTime = action.payload?.timestamp ?? Date.now();
-      state.lastTick = action.payload?.timestamp ?? Date.now();
+    startGame(state, action: PayloadAction<StartPayload | undefined>) {
+      const difficulty = action?.payload?.difficulty ?? state.difficulty;
+      const seed = action?.payload?.seed ?? createSeed(action?.payload?.timestamp);
+      state.difficulty = difficulty;
+      state.seed = seed;
+      const { frame, lockedOut } = initializeFrame(seed, difficulty);
+      updateFrame(state, frame);
+      state.status = lockedOut ? "gameOver" : "running";
     },
     pauseGame(state) {
       if (state.status === "running") {
@@ -54,33 +63,84 @@ export const gameSlice = createSlice({
     },
     endGame(state) {
       state.status = "gameOver";
-      state.lastTick = Date.now();
     },
-    incrementScore(state, action: PayloadAction<{ lines: number; timestamp?: number }>) {
-      if (state.status !== "running") {
+    tick(state, action: PayloadAction<TickPayload | undefined>) {
+      if (state.status !== "running" || !state.frame) {
         return;
       }
-
-      const { lines, timestamp } = action.payload;
-      const baseScore = Math.max(0, lines) * 100;
-      const difficultyMultiplier = difficultyLevelBoost[state.difficulty];
-      state.score += baseScore * difficultyMultiplier * state.level;
-      state.linesCleared += lines;
-
-      if (state.linesCleared >= state.level * 10) {
-        state.level += 1;
-      }
-
-      if (timestamp) {
-        state.lastTick = timestamp;
+      const elapsed = action.payload?.elapsed ?? state.frame.dropInterval;
+      const result = tickFrame(state.frame, elapsed);
+      updateFrame(state, result.frame);
+      if (result.lockedOut) {
+        state.status = "gameOver";
       }
     },
-    resetGame() {
+    moveLeft(state) {
+      if (state.status !== "running" || !state.frame) return;
+      const result = movePiece(state.frame, -1, 0);
+      updateFrame(state, result.frame);
+    },
+    moveRight(state) {
+      if (state.status !== "running" || !state.frame) return;
+      const result = movePiece(state.frame, 1, 0);
+      updateFrame(state, result.frame);
+    },
+    softDrop(state) {
+      if (state.status !== "running" || !state.frame) return;
+      const result = engineSoftDrop(state.frame);
+      updateFrame(state, result.frame);
+      if (result.lockedOut) state.status = "gameOver";
+    },
+    hardDrop(state) {
+      if (state.status !== "running" || !state.frame) return;
+      const result = engineHardDrop(state.frame);
+      updateFrame(state, result.frame);
+      if (result.lockedOut) state.status = "gameOver";
+    },
+    rotateClockwise(state) {
+      if (state.status !== "running" || !state.frame) return;
+      const result = rotateActive(state.frame, 1);
+      updateFrame(state, result.frame);
+    },
+    rotateCounterClockwise(state) {
+      if (state.status !== "running" || !state.frame) return;
+      const result = rotateActive(state.frame, -1);
+      updateFrame(state, result.frame);
+    },
+    hold(state) {
+      if (state.status !== "running" || !state.frame) return;
+      const result = holdPiece(state.frame);
+      updateFrame(state, result.frame);
+      if (result.lockedOut) state.status = "gameOver";
+    },
+    resetGameState() {
       return initialState;
     },
   },
 });
 
-export const { startGame, pauseGame, resumeGame, endGame, incrementScore, resetGame } = gameSlice.actions;
+export const {
+  startGame,
+  pauseGame,
+  resumeGame,
+  endGame,
+  tick,
+  moveLeft,
+  moveRight,
+  softDrop,
+  hardDrop,
+  rotateClockwise,
+  rotateCounterClockwise,
+  hold,
+  resetGameState,
+} = gameSlice.actions;
+
 export const gameReducer = gameSlice.reducer;
+
 export const selectGameState = (state: { game: GameState }) => state.game;
+export const selectFrame = (state: { game: GameState }) => state.game.frame;
+export const selectScore = (state: { game: GameState }) => state.game.frame?.score ?? 0;
+export const selectLinesCleared = (state: { game: GameState }) => state.game.frame?.clearedLines ?? 0;
+export const selectLevel = (state: { game: GameState }) => state.game.frame?.level ?? 1;
+export const selectDifficultyMultiplier = (state: { game: GameState }) =>
+  difficultyLevelBoost[state.game.difficulty];

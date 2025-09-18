@@ -5,6 +5,7 @@ test.describe("Home page", () => {
     await page.goto("/");
 
     await expect(page.getByRole("heading", { name: "Tetris Neon Odyssey" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Începe jocul" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Incepe jocul" })).toBeVisible();
+    await expect(page.getByTestId("theme-switch")).toBeVisible();
   });
 });

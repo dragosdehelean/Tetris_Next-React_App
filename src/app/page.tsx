@@ -1,5 +1,7 @@
 ﻿import { Box, Container } from "@mui/material";
 import { GameDashboard } from "@/components/home/GameDashboard";
+import { GameAudio } from "@/components/game/GameAudio";
+import { GameLifecycle } from "@/components/game/GameLifecycle";
 
 export default function HomePage() {
   return (
@@ -14,6 +16,8 @@ export default function HomePage() {
       >
         <Container maxWidth="lg">
           <GameDashboard />
+          <GameAudio />
+          <GameLifecycle />
         </Container>
       </Box>
     </main>
