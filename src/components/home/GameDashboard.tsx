@@ -18,6 +18,7 @@ import { GameCanvas } from "@/components/game/GameCanvas";
 import { SettingsPanel } from "@/components/game/SettingsPanel";
 import { LeaderboardPanel } from "@/components/game/LeaderboardPanel";
 import { TestControls } from "@/components/test/TestControls";
+import { InstructionsButton } from "@/components/game/InstructionsDialog";
 import { ControlsOverlay } from "@/components/game/ControlsOverlay";
 
 export function GameDashboard() {
@@ -71,6 +72,7 @@ export function GameDashboard() {
         <Button variant="outlined" color="secondary" onClick={handleThemeSwitch} data-testid="theme-switch" sx={{ px: 4 }}>
           Schimba tema ({themeMeta.label})
         </Button>
+        <InstructionsButton />
       </Stack>
 
       <Box sx={{ borderRadius: 4, border: "1px solid", borderColor: "var(--color-panel-border)", background: "var(--color-surface-overlay, rgba(19,7,46,0.65))", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", p: 2 }}>

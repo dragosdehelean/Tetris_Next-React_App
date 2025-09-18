@@ -87,7 +87,7 @@ export function GameCanvas() {
     const onKeyDown = (e: KeyboardEvent) => {
       const key = e.key;
       const isRunning = game.status === "running";
-      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "] .includes(key)) {
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " ", "PageUp"].includes(key)) {
         e.preventDefault();
       }
       if (key.toLowerCase() === "p") {
@@ -114,6 +114,9 @@ export function GameCanvas() {
           break;
         case "z":
         case "Z":
+          dispatch(rotateCounterClockwise());
+          break;
+        case "PageUp":
           dispatch(rotateCounterClockwise());
           break;
         case " ":
