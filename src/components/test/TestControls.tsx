@@ -1,9 +1,9 @@
 "use client";
 
-import { Button, Stack } from "@mui/material";
+import { Button, Stack, Typography } from "@mui/material";
 import { useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/features/store/hooks";
-import { debugSetScore, endGame, selectGameState } from "@/features/game/gameSlice";
+import { debugSetActive, debugSetScore, endGame, selectGameState } from "@/features/game/gameSlice";
 
 export function TestControls() {
   const params = useSearchParams();
@@ -12,6 +12,9 @@ export function TestControls() {
   const game = useAppSelector(selectGameState);
 
   if (!isTest) return null;
+
+  const rotation = game.frame?.activePiece?.rotation ?? null;
+  const type = game.frame?.activePiece?.type ?? null;
 
   return (
     <Stack direction="row" gap={1} sx={{ mt: 2 }}>
@@ -26,7 +29,12 @@ export function TestControls() {
       <Button data-testid="force-gameover" size="small" variant="contained" color="warning" onClick={() => dispatch(endGame())}>
         Force Game Over
       </Button>
+      <Button data-testid="debug-set-t" size="small" variant="outlined" onClick={() => dispatch(debugSetActive({ type: "T" }))}>
+        Set piece T
+      </Button>
+      <Typography data-testid="debug-rotation" variant="caption" sx={{ ml: 1 }}>
+        rot={rotation ?? "-"} type={type ?? "-"}
+      </Typography>
     </Stack>
   );
 }
-

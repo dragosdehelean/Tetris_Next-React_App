@@ -3,6 +3,8 @@ import { hardDrop as engineHardDrop, holdPiece, initializeFrame, movePiece, rota
 import type { GameFrameState } from "@/features/game/engine/state";
 import { createSeed } from "@/features/game/engine/prng";
 import type { Difficulty, GameStatus } from "@/features/game/types";
+import type { TetrominoType } from "@/features/game/engine/tetromino";
+import { SPAWN_POSITIONS } from "@/features/game/engine/constants";
 import { difficultyLevelBoost } from "@/features/game/types";
 
 export interface GameState {
@@ -124,6 +126,16 @@ export const gameSlice = createSlice({
       };
       state.lastUpdate = Date.now();
     },
+    debugSetActive(state, action: PayloadAction<{ type: TetrominoType }>) {
+      if (!state.frame) return;
+      const t = action.payload.type;
+      const spawn = SPAWN_POSITIONS[t];
+      state.frame = {
+        ...state.frame,
+        activePiece: { type: t, rotation: 0, position: { x: spawn.x, y: spawn.y } },
+      };
+      state.lastUpdate = Date.now();
+    },
     resetGameState() {
       return initialState;
     },
@@ -144,6 +156,7 @@ export const {
   rotateCounterClockwise,
   hold,
   debugSetScore,
+  debugSetActive,
   resetGameState,
 } = gameSlice.actions;
 

@@ -110,14 +110,16 @@ export function GameCanvas() {
         case "ArrowUp":
         case "x":
         case "X":
-          dispatch(rotateClockwise());
+          // Visually clockwise in y-down canvas coordinates corresponds to index -1 in our shapes
+          dispatch(rotateCounterClockwise());
           break;
         case "z":
         case "Z":
           dispatch(rotateCounterClockwise());
           break;
         case "PageUp":
-          dispatch(rotateCounterClockwise());
+          // PageUp maps to visual CCW, which is index +1 here
+          dispatch(rotateClockwise());
           break;
         case " ":
           dispatch(hardDrop());
