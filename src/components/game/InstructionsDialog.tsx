@@ -39,36 +39,27 @@ export function InstructionsButton() {
         <DialogContent>
           <Stack gap={2}>
             <Typography variant="body2" color="text.secondary">
-              Scop: pozitioneaza piesele pentru a completa linii. Liniile complete sunt sterse si acorda puncte.
+              Scop: poziționează piesele astfel încât să completezi linii. Liniile complete sunt eliminate și îți aduc
+              puncte.
             </Typography>
-            <Typography variant="subtitle2">Controale tastatura</Typography>
+            <Typography variant="subtitle2">Controale tastatură</Typography>
             <ul style={{ marginTop: 0 }}>
-              <li>Stanga/Dreapta: deplasare</li>
-              <li>Sageata sus: rotire CW</li>
-              <li>PgUp: rotire CCW</li>
-              <li>Sageata jos: soft drop</li>
+              <li>Săgeată stânga/dreapta: deplasare pe orizontală</li>
+              <li>Săgeată sus: rotire în sensul acelor de ceasornic</li>
+              <li>PgUp: rotire invers acelor de ceasornic</li>
+              <li>Săgeată jos: soft drop (coborâre mai rapidă)</li>
               <li>Space: hard drop</li>
               <li>C: hold</li>
-              <li>P: pauza/resume</li>
+              <li>P: pauză / continuare</li>
             </ul>
 
-            <Typography variant="subtitle2">Scor si multiplicatori</Typography>
+            <Typography variant="subtitle2">Scor și multiplicatori</Typography>
             <Stack component="ul" sx={{ m: 0, pl: 3 }}>
-              <li>
-                Baza pe linii: Single 100, Double 300, Triple 500, Tetris 800 (puncte de baza)
-              </li>
-              <li>
-                Formula: Puncte = Baza × Nivel × Multiplicator dificultate
-              </li>
-              <li>
-                Multiplicatori dificultate: Relaxed ×1, Classic ×2, Expert ×3
-              </li>
-              <li>
-                Soft drop: +1 × multiplicator per pas (in jos)
-              </li>
-              <li>
-                Hard drop: blocheaza instant piesa (fara bonus pe pas), puncte din liniile curatate
-              </li>
+              <li>Punctaj de bază (pentru linii eliminate simultan): 1 linie = 100, 2 = 300, 3 = 500, 4 (Tetris) = 800.</li>
+              <li>Formula finală: Puncte = Punctaj de bază × Nivelul curent × Multiplicatorul dificultății.</li>
+              <li>Multiplicatorul dificultății: Relaxed ×1, Classic ×2, Expert ×3.</li>
+              <li>Soft drop (Săgeată jos): +1 punct pentru fiecare pas coborât, înmulțit cu multiplicatorul dificultății.</li>
+              <li>Hard drop (Space): piesa se fixează imediat; nu primești puncte pe pas, ci doar pentru liniile eliminate la fixare.</li>
             </Stack>
           </Stack>
         </DialogContent>

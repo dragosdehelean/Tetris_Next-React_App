@@ -46,7 +46,7 @@ export function GameCanvas() {
 
   const cols = 10;
   const rows = 20;
-  const cellSize = 18; // px per cell
+  const cellSize = 28; // px per cell (mărim piesele și canvas-ul)
   const padding = 8;
 
   const width = useMemo(() => cols * cellSize + padding * 2, [cols]);

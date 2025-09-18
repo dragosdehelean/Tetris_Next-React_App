@@ -20,6 +20,7 @@ import { LeaderboardPanel } from "@/components/game/LeaderboardPanel";
 import { TestControls } from "@/components/test/TestControls";
 import { InstructionsButton } from "@/components/game/InstructionsDialog";
 import { ControlsOverlay } from "@/components/game/ControlsOverlay";
+import { useAddScoreMutation } from "@/features/scores/localScoresApi";
 
 export function GameDashboard() {
   const dispatch = useAppDispatch();
@@ -29,6 +30,7 @@ export function GameDashboard() {
   const linesCleared = useAppSelector(selectLinesCleared);
   const themeName = useAppSelector(selectThemeName);
   const themeMeta = THEME_OPTIONS.find((theme) => theme.id === themeName) ?? THEME_OPTIONS[0];
+  const [addScore] = useAddScoreMutation();
 
   const primaryCta = useMemo(() => {
     switch (game.status) {
@@ -49,6 +51,25 @@ export function GameDashboard() {
     dispatch(setTheme(nextTheme));
   }, [dispatch, themeName]);
 
+  const handleRestart = useCallback(async () => {
+    const frame = game.frame;
+    if (frame) {
+      try {
+        await addScore({
+          id: `${Date.now()}`,
+          value: frame.score,
+          linesCleared: frame.clearedLines,
+          levelReached: frame.level,
+          difficulty: game.difficulty,
+          timestamp: new Date().toISOString(),
+        }).unwrap();
+      } catch {
+        // noop local persistence
+      }
+    }
+    dispatch(startGame({ difficulty: game.difficulty }));
+  }, [addScore, dispatch, game.difficulty, game.frame]);
+
   return (
     <Stack gap={4} sx={{ maxWidth: 720, mx: "auto", textAlign: "center", py: { xs: 8, md: 12 } }}>
       <Stack gap={2}>
@@ -65,19 +86,24 @@ export function GameDashboard() {
         <StatCard label="Linii" value={linesCleared.toString()} />
       </Stack>
 
+      {/* Canvas imediat sub HUD */}
+      <Box sx={{ borderRadius: 4, border: "1px solid", borderColor: "var(--color-panel-border)", background: "var(--color-surface-overlay, rgba(19,7,46,0.65))", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", p: 2 }}>
+        <GameCanvas />
+      </Box>
+
+      {/* Rând de controale dedesubtul jocului */}
       <Stack direction={{ xs: "column", sm: "row" }} gap={2} justifyContent="center" alignItems="center">
         <Button variant="contained" size="large" color="primary" onClick={primaryCta.onClick} sx={{ alignSelf: "center", px: 6 }}>
           {primaryCta.label}
+        </Button>
+        <Button variant="outlined" color="secondary" onClick={handleRestart} data-testid="restart-button" sx={{ px: 4 }}>
+          Restart (salvează scor)
         </Button>
         <Button variant="outlined" color="secondary" onClick={handleThemeSwitch} data-testid="theme-switch" sx={{ px: 4 }}>
           Schimba tema ({themeMeta.label})
         </Button>
         <InstructionsButton />
       </Stack>
-
-      <Box sx={{ borderRadius: 4, border: "1px solid", borderColor: "var(--color-panel-border)", background: "var(--color-surface-overlay, rgba(19,7,46,0.65))", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", p: 2 }}>
-        <GameCanvas />
-      </Box>
 
       <Box sx={{ display: { xs: "block", md: "none" } }}>
         <ControlsOverlay />
