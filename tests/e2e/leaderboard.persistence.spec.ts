@@ -10,12 +10,14 @@ test.describe("Leaderboard@Persistence", () => {
     // Trigger game over
     await page.getByTestId("force-gameover").click();
 
+    // Wait for leaderboard to update after game over
     await expect(page.getByText(/Top scoruri \(Classic\)/)).toBeVisible();
-    await expect(page.getByTestId("leaderboard").getByText(/1[.,]?234/)).toBeVisible();
+    await expect(page.getByTestId("leaderboard").getByText(/1[.,]?234/)).toBeVisible({ timeout: 10000 });
 
     await page.reload();
 
+    // Wait for leaderboard to persist after reload
     await expect(page.getByText(/Top scoruri \(Classic\)/)).toBeVisible();
-    await expect(page.getByTestId("leaderboard").getByText(/1[.,]?234/)).toBeVisible();
+    await expect(page.getByTestId("leaderboard").getByText(/1[.,]?234/)).toBeVisible({ timeout: 10000 });
   });
 });

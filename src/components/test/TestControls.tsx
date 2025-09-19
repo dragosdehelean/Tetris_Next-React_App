@@ -44,7 +44,7 @@ function TestControlsInner() {
       <Button data-testid="debug-set-l" size="small" variant="outlined" onClick={() => dispatch(debugSetActive({ type: "L" }))}>L</Button>
       <Button data-testid="debug-set-j" size="small" variant="outlined" onClick={() => dispatch(debugSetActive({ type: "J" }))}>J</Button>
       <Typography data-testid="debug-rotation" variant="caption" sx={{ ml: 1 }}>
-        rot={rotation ?? "-"} type={type ?? "-"}
+        rot={rotation !== null ? rotation : "-"} type={type ?? "-"}
       </Typography>
     </Stack>
   );

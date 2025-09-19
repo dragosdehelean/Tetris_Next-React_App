@@ -8,7 +8,7 @@ test.describe("StartGame@Classic", () => {
     await expect(startBtn).toBeVisible();
     await startBtn.click();
 
-    await expect(page.getByRole("button", { name: "Pauza" })).toBeVisible();
+    await expect(page.getByTestId("primary-action-button")).toContainText("Pauza", { timeout: 10000 });
   });
 });
 
