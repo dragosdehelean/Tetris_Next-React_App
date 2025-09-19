@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { Provider } from "react-redux";
 import { useSearchParams } from "next/navigation";
 import { makeStore, type AppStore } from "@/features/store/store";
@@ -61,7 +61,9 @@ function AppThemeProvider({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
-      <ThemeSynchronizer themeName={themeName} />
+      <Suspense fallback={null}>
+        <ThemeSynchronizer themeName={themeName} />
+      </Suspense>
       <SettingsSynchronizer />
       {children}
     </ThemeProvider>

@@ -1,11 +1,20 @@
 "use client";
 
 import { Button, Stack, Typography } from "@mui/material";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/features/store/hooks";
 import { debugSetActive, debugSetScore, endGame, selectGameState } from "@/features/game/gameSlice";
 
 export function TestControls() {
+  return (
+    <Suspense fallback={null}>
+      <TestControlsInner />
+    </Suspense>
+  );
+}
+
+function TestControlsInner() {
   const params = useSearchParams();
   const isTest = params?.get("test") === "1";
   const dispatch = useAppDispatch();
