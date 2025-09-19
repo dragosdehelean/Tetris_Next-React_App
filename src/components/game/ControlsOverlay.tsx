@@ -59,16 +59,28 @@ export function ControlsOverlay() {
         px: 1,
       }}
     >
-      {/* Layout conform screenshot-ului */}
-      <Stack spacing={1.5} alignItems="center">
+      {/* Layout Gaming Classic - 2 rânduri ergonomice */}
+      <Stack spacing={2} alignItems="center">
         
-        {/* Rândul de sus: Stânga, Soft Drop, Dreapta */}
+        {/* Rândul 1: Butoane de mișcare și rotație [⟲] [◀] [▶] [⟳] */}
         <Stack 
           direction="row" 
-          spacing={7}
+          spacing={5}
           alignItems="center"
           justifyContent="center"
+          sx={{ width: '100%', px: 2 }}
         >
+          {/* Rotație CCW */}
+          <Button 
+            variant="outlined"
+            onClick={() => isRunning && dispatch(rotateCounterClockwise())} 
+            aria-label="Rotație invers acelor de ceasornic"
+            disabled={!isRunning}
+            sx={rotateButtonStyle}
+          >
+            ⟲
+          </Button>
+
           {/* Stânga */}
           <Button 
             variant="outlined"
@@ -78,21 +90,6 @@ export function ControlsOverlay() {
             sx={moveButtonStyle}
           >
             ◀
-          </Button>
-
-          {/* Soft Drop */}
-          <Button 
-            variant="outlined"
-            onClick={() => isRunning && dispatch(softDrop())} 
-            aria-label="Coborâre lentă"
-            disabled={!isRunning}
-            sx={{
-              ...moveButtonStyle,
-              minWidth: { xs: 44, sm: 48 },
-              minHeight: { xs: 44, sm: 48 },
-            }}
-          >
-            ▼
           </Button>
 
           {/* Dreapta */}
@@ -105,26 +102,8 @@ export function ControlsOverlay() {
           >
             ▶
           </Button>
-        </Stack>
 
-        {/* Rândul de jos: Rotații */}
-        <Stack 
-          direction="row" 
-          spacing={8}
-          alignItems="center"
-          justifyContent="center"
-          sx={{ width: '100%', px: 1 }}
-        >
-          <Button 
-            variant="outlined"
-            onClick={() => isRunning && dispatch(rotateCounterClockwise())} 
-            aria-label="Rotație invers acelor de ceasornic"
-            disabled={!isRunning}
-            sx={rotateButtonStyle}
-          >
-            ⟲
-          </Button>
-          
+          {/* Rotație CW */}
           <Button 
             variant="outlined"
             onClick={() => isRunning && dispatch(rotateClockwise())} 
@@ -136,24 +115,68 @@ export function ControlsOverlay() {
           </Button>
         </Stack>
 
-        {/* Hard Drop - poziționat central sub rotații */}
-        <Button 
-          variant="contained"
-          color="secondary"
-          onClick={() => isRunning && dispatch(hardDrop())} 
-          aria-label="Plasare instantanee"
-          disabled={!isRunning}
-          sx={{
-            minWidth: { xs: 80, sm: 90 },
-            minHeight: { xs: 40, sm: 44 },
-            borderRadius: 3,
-            fontSize: { xs: '0.8rem', sm: '0.9rem' },
-            fontWeight: 600,
-            mt: 0.5,
-          }}
-        >
-          HARD DROP
-        </Button>
+        {/* Rândul 2: Soft Drop (mijloc) și Hard Drop (dreapta) */}
+        <Box sx={{ 
+          position: 'relative', 
+          width: '100%', 
+          display: 'flex', 
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          {/* Soft Drop - fix pe mijlocul rândului */}
+          <Button 
+            variant="outlined"
+            onClick={() => isRunning && dispatch(softDrop())} 
+            aria-label="Coborâre lentă"
+            disabled={!isRunning}
+            sx={{
+              ...moveButtonStyle,
+              minWidth: { xs: 48, sm: 52 },
+              minHeight: { xs: 48, sm: 52 },
+            }}
+          >
+            ▼
+          </Button>
+
+          {/* Hard Drop - poziționat la dreapta */}
+          <Button
+            variant="contained"
+            onClick={() => isRunning && dispatch(hardDrop())}
+            disabled={!isRunning}
+            aria-label="Coborâre instantanee"
+            sx={{
+              position: 'absolute',
+              right: 0,
+              minWidth: { xs: 120, sm: 140 },
+              minHeight: { xs: 48, sm: 52 },
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              backgroundColor: 'rgba(255, 255, 255, 0.15)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                transform: 'translateY(-1px)',
+                boxShadow: '0 6px 16px rgba(0, 0, 0, 0.4)',
+              },
+              '&:active': {
+                transform: 'translateY(0)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+              },
+              '&:disabled': {
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                color: 'rgba(255, 255, 255, 0.3)',
+                cursor: 'not-allowed',
+              },
+            }}
+          >
+            HARD DROP
+          </Button>
+        </Box>
       </Stack>
     </Box>
   );

@@ -78,10 +78,14 @@ export function GameCanvas() {
   const cols = 10;
   const rows = 20;
   const [cellSize, setCellSize] = useState<number>(28); // responsive
-  const padding = 8;
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  
+  // Mobile-optimized dimensions while keeping 20 rows
+  const baseCellSize = isMobile ? 25 : 28;
+  const padding = isMobile ? 6 : 8;
 
-  const width = useMemo(() => cols * cellSize + padding * 2, [cols, cellSize]);
-  const height = useMemo(() => rows * cellSize + padding * 2, [rows, cellSize]);
+  const width = useMemo(() => cols * cellSize + (isMobile ? 6 : 8) * 2, [cols, cellSize, isMobile]);
+  const height = useMemo(() => rows * cellSize + (isMobile ? 6 : 8) * 2, [rows, cellSize, isMobile]);
 
   const startLoop = useCallback(() => {
     if (rafRef.current) return;
@@ -122,12 +126,15 @@ export function GameCanvas() {
 
     let ro: ResizeObserver | undefined;
     const handleSize = (containerWidth: number) => {
-      // For mobile devices, use more generous cell sizes
-      const isMobile = containerWidth < 600;
-      const baseMaxCell = isMobile ? 32 : 28;
-      const baseMinCell = isMobile ? 26 : 22;
+      // Mobile-optimized sizing with smaller cells for better screen fit
+      const isMobileDevice = containerWidth < 600;
+      setIsMobile(isMobileDevice);
       
-      const maxCell = Math.min(baseMaxCell, Math.floor((containerWidth - padding * 2) / cols));
+      const baseMaxCell = isMobileDevice ? 30 : 28;
+      const baseMinCell = isMobileDevice ? 25 : 22;
+      const currentPadding = isMobileDevice ? 6 : 8;
+      
+      const maxCell = Math.min(baseMaxCell, Math.floor((containerWidth - currentPadding * 2) / cols));
       const next = Math.max(baseMinCell, maxCell);
       if (Number.isFinite(next) && next !== cellSize) setCellSize(next);
     };
@@ -238,7 +245,8 @@ export function GameCanvas() {
       for (let x = 0; x < frame.board[y].length; x++) {
         const val = frame.board[y][x];
         if (!val) continue;
-        drawCellByTheme(ctx, padding + x * cellSize, padding + y * cellSize, cellSize, COLORS[val], themeName, val);
+        const currentPadding = isMobile ? 6 : 8;
+        drawCellByTheme(ctx, currentPadding + x * cellSize, currentPadding + y * cellSize, cellSize, COLORS[val], themeName, val);
       }
     }
 
@@ -247,9 +255,10 @@ export function GameCanvas() {
       const coords = getPieceCells(frame.activePiece);
       const ghost = getDroppedCoordinates(frame.board, coords);
       ctx.fillStyle = "rgba(255,255,255,0.15)";
+      const currentPadding = isMobile ? 6 : 8;
       for (const { x, y } of ghost) {
         if (y < 0) continue;
-        ctx.fillRect(padding + x * cellSize + 1, padding + y * cellSize + 1, cellSize - 2, cellSize - 2);
+        ctx.fillRect(currentPadding + x * cellSize + 1, currentPadding + y * cellSize + 1, cellSize - 2, cellSize - 2);
       }
     }
 
@@ -258,10 +267,11 @@ export function GameCanvas() {
       const coords = getPieceCells(frame.activePiece);
       for (const { x, y } of coords) {
         if (y < 0) continue;
+        const currentPadding = isMobile ? 6 : 8;
         drawCellByTheme(
           ctx,
-          padding + x * cellSize,
-          padding + y * cellSize,
+          currentPadding + x * cellSize,
+          currentPadding + y * cellSize,
           cellSize,
           COLORS[frame.activePiece.type],
           themeName,
@@ -290,7 +300,8 @@ export function GameCanvas() {
           g.addColorStop(0, rgba(pal.primary, alpha));
           g.addColorStop(1, rgba(pal.secondary, alpha));
           ctx.fillStyle = g;
-          ctx.fillRect(padding, padding, cols * cellSize, rows * cellSize);
+          const currentPadding = isMobile ? 6 : 8;
+          ctx.fillRect(currentPadding, currentPadding, cols * cellSize, rows * cellSize);
         }
       }
     }
