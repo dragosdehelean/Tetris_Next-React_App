@@ -78,47 +78,41 @@ export function GameDashboard() {
         <Typography color="text.secondary" sx={{ fontSize: { xs: 14, sm: 16 } }}>MVP Tetris cu dificultăți adaptabile și performanță ridicată. Apasă Start și intră în joc.</Typography>
       </Stack>
 
-      {/* Panou joc cu HUD pill centrat deasupra canvasului */}
+      {/* Panou joc cu HUD sub canvas */}
       <Box sx={{
-        position: "relative",
         borderRadius: 4,
         border: "1px solid",
         borderColor: "var(--board-border-color, var(--color-panel-border))",
         background: "var(--color-surface-overlay, rgba(19,7,46,0.65))",
         backdropFilter: "blur(12px)",
         boxShadow: "0 0 22px var(--board-border-glow, transparent)",
-        p: { xs: 1.5, sm: 2 }, pt: { xs: 5, sm: 5 }, mt: 0, mb: 1,
+        p: { xs: 1.5, sm: 2 }, mt: 0, mb: 1,
       }}>
-        {/* HUD pill overlay */}
+        {/* Canvas centrat */}
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <GameCanvas />
+        </Box>
+
+        {/* HUD pill sub canvas */}
         <Box
           sx={{
-            position: "absolute",
-            top: 8,
-            left: "50%",
-            transform: "translateX(-50%)",
+            mt: 1,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             gap: 1,
             flexWrap: "wrap",
-            px: 1,
-            py: 0.5,
+            px: 1.2,
+            py: 0.6,
             borderRadius: 999,
             border: "1px solid var(--board-border-color)",
             boxShadow: "0 0 12px var(--board-border-glow)",
             background: "rgba(0,0,0,0.18)",
-            zIndex: 2,
-            maxWidth: "calc(100% - 16px)",
           }}
         >
           <HudStat label="Scor" value={score.toLocaleString()} />
           <HudStat label="Nivel" value={level.toString()} />
           <HudStat label="Linii" value={linesCleared.toString()} />
-        </Box>
-
-        {/* Canvas centrat */}
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <GameCanvas />
         </Box>
       </Box>
 

@@ -215,7 +215,7 @@ export function GameCanvas() {
       for (let x = 0; x < frame.board[y].length; x++) {
         const val = frame.board[y][x];
         if (!val) continue;
-        drawCellByTheme(ctx, padding + x * cellSize, padding + y * cellSize, cellSize, COLORS[val], themeName);
+        drawCellByTheme(ctx, padding + x * cellSize, padding + y * cellSize, cellSize, COLORS[val], themeName, val);
       }
     }
 
@@ -235,7 +235,15 @@ export function GameCanvas() {
       const coords = getPieceCells(frame.activePiece);
       for (const { x, y } of coords) {
         if (y < 0) continue;
-        drawCellByTheme(ctx, padding + x * cellSize, padding + y * cellSize, cellSize, COLORS[frame.activePiece.type], themeName);
+        drawCellByTheme(
+          ctx,
+          padding + x * cellSize,
+          padding + y * cellSize,
+          cellSize,
+          COLORS[frame.activePiece.type],
+          themeName,
+          frame.activePiece.type,
+        );
       }
     }
 
@@ -327,6 +335,7 @@ function drawCellByTheme(
   size: number,
   colorHex: string,
   theme: ThemeSkin | string,
+  pieceType?: TetrominoType,
 ): void {
   const px = x + 1;
   const py = y + 1;
@@ -345,34 +354,464 @@ function drawCellByTheme(
     return;
   }
 
-  if (theme === "cityscape") {
-    // Cityscape Dusk: glassy cyan highlight, minimal glow
-    ctx.fillStyle = darken(colorHex, 0.35);
-    ctx.fillRect(px, py, s, s);
-    const g = ctx.createLinearGradient(0, py, 0, py + s);
-    g.addColorStop(0, "rgba(0, 194, 255, 0.22)");
-    g.addColorStop(0.5, "rgba(0, 194, 255, 0.10)");
-    g.addColorStop(1, "rgba(0, 0, 0, 0)");
-    ctx.fillStyle = g;
-    ctx.fillRect(px, py, s, Math.max(1, Math.floor(s * 0.65)));
-    ctx.strokeStyle = "rgba(0, 194, 255, 0.6)";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(px + 0.5, py + 0.5, s - 1, s - 1);
+  if (theme === "cityscape" || theme === "aurora") {
+    // Deterministic variant based on cell coords
+    const cx = Math.floor(x / size);
+    const cy = Math.floor(y / size);
+    const seed = Math.abs((cx * 73856093) ^ (cy * 19349663));
+    if (theme === "cityscape") {
+      const motif = cityscapeMotifForPiece(pieceType);
+      const orient = seed % 3; // small orientation/variant tweaks
+      const variant = motif * 10 + orient;
+      const tile = getThemeTile("cityscape", s, colorHex, variant);
+      ctx.drawImage(tile, px, py);
+      return;
+    }
+    // aurora variants 0..2
+    const variant = seed % 3;
+    const tile = getThemeTile("aurora", s, colorHex, variant);
+    ctx.drawImage(tile, px, py);
     return;
   }
 
-  // Aurora Borealis: soft aurora-tinted highlight
-  ctx.fillStyle = darken(colorHex, 0.4);
+  // Fallback
+  ctx.fillStyle = colorHex;
   ctx.fillRect(px, py, s, s);
-  const gr = ctx.createLinearGradient(px, py, px, py + s);
-  gr.addColorStop(0, "rgba(96, 211, 148, 0.18)");
-  gr.addColorStop(0.6, "rgba(179, 136, 255, 0.10)");
-  gr.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = gr;
-  ctx.fillRect(px, py, s, Math.max(1, Math.floor(s * 0.7)));
-  ctx.strokeStyle = "rgba(96, 211, 148, 0.5)";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(px + 0.5, py + 0.5, s - 1, s - 1);
+}
+
+const tileCache = new Map<string, HTMLCanvasElement>();
+
+function getThemeTile(theme: ThemeSkin, size: number, colorHex: string, variant = 0): HTMLCanvasElement {
+  const key = `${theme}|${size}|${colorHex}|v${variant}`;
+  const existing = tileCache.get(key);
+  if (existing) return existing;
+
+  const c = document.createElement("canvas");
+  c.width = size; c.height = size;
+  const cx = c.getContext("2d")!;
+
+  if (theme === "cityscape") {
+    // Cityscape motifs: 0 neon billboard, 1 traffic light, 2 windows, 3 headlight streak,
+    // 4 bokeh/starry, 5 brick+window. All bright and engaging.
+    cx.save();
+    roundedRectPath(cx, 0.5, 0.5, size - 1, size - 1, Math.max(3, Math.floor(size * 0.22)));
+    cx.clip();
+
+    const pal = THEME_PALETTES.cityscape;
+
+    // Vivid base (blue -> cyan)
+    const base = cx.createLinearGradient(0, 0, 0, size);
+    base.addColorStop(0, rgba("#073153", 0.98));
+    base.addColorStop(1, rgba(pal.primary, 0.25));
+    cx.fillStyle = base;
+    cx.fillRect(0, 0, size, size);
+
+    // Piece color tint for identity
+    cx.globalCompositeOperation = "lighter";
+    cx.fillStyle = rgba(colorHex, 0.32);
+    cx.fillRect(0, 0, size, size);
+
+    // Decode motif + orientation from variant
+    const motif = Math.floor(variant / 10) % 10; // 0..9
+    const orient = variant % 10; // 0..9
+
+    // Motifs
+    switch (motif) {
+      case 0: {
+        // Hazard stripes (construction/urban signage) – distinct and warm
+        cx.globalCompositeOperation = "source-over";
+        // Dark asphalt base
+        const base = cx.createLinearGradient(0, 0, 0, size);
+        base.addColorStop(0, rgba("#0e141a", 1));
+        base.addColorStop(1, rgba("#1a2630", 1));
+        cx.fillStyle = base;
+        cx.fillRect(0, 0, size, size);
+
+        // Diagonal yellow stripes
+        cx.save();
+        cx.translate(size / 2, size / 2);
+        cx.rotate(Math.PI / 4);
+        const stripeW = Math.max(3, Math.floor(size * 0.22));
+        const total = size * 2;
+        for (let x = -total; x < total; x += stripeW * 2) {
+          const g = cx.createLinearGradient(0, -size, 0, size);
+          g.addColorStop(0, rgba("#ffd166", 0.95));
+          g.addColorStop(1, rgba("#ff9f1a", 0.95));
+          cx.fillStyle = g;
+          cx.fillRect(x, -size, stripeW, size * 2);
+        }
+        cx.restore();
+
+        // Rivets in corners (metallic)
+        const riv = (bx: number, by: number) => {
+          const rg = cx.createRadialGradient(bx, by, 0, bx, by, Math.max(1.2, size * 0.10));
+          rg.addColorStop(0, rgba("#ffffff", 0.9));
+          rg.addColorStop(1, rgba("#7f8a93", 0.2));
+          cx.fillStyle = rg;
+          cx.beginPath(); cx.arc(bx, by, Math.max(1, size * 0.07), 0, Math.PI * 2); cx.fill();
+        };
+        riv(2.5, 2.5); riv(size - 2.5, 2.5); riv(2.5, size - 2.5); riv(size - 2.5, size - 2.5);
+        break;
+      }
+      case 1: {
+        // Traffic light (centered with housing)
+        const cxm = Math.floor(size * 0.5);
+        const hy = Math.floor(size * 0.12);
+        const hh = Math.floor(size * 0.76);
+        const hw = Math.max(4, Math.floor(size * 0.34));
+        const hx = Math.floor(cxm - hw / 2);
+        const hr = Math.max(2, Math.floor(size * 0.12));
+
+        // Housing
+        cx.globalCompositeOperation = "source-over";
+        const housingBg = cx.createLinearGradient(0, hy, 0, hy + hh);
+        housingBg.addColorStop(0, rgba("#0b141c", 0.95));
+        housingBg.addColorStop(1, rgba("#172736", 0.95));
+        cx.fillStyle = housingBg;
+        roundedRectPath(cx, hx, hy, hw, hh, hr);
+        cx.fill();
+        cx.strokeStyle = rgba("#8fb9d8", 0.25);
+        cx.lineWidth = 1;
+        cx.stroke();
+
+        // Lights (centered)
+        const lights = ["#ff3b30", "#ffcc00", "#34c759"]; // red, amber, green
+        const positions = [hy + hh * 0.2, hy + hh * 0.5, hy + hh * 0.8];
+        const r = Math.max(1.6, hh * 0.13);
+        cx.globalCompositeOperation = "lighter";
+        for (let i = 0; i < 3; i++) {
+          const y = positions[i];
+          const g = cx.createRadialGradient(cxm, y, 0, cxm, y, r * 2.1);
+          g.addColorStop(0, rgba(lights[i], 0.95));
+          g.addColorStop(0.4, rgba(lights[i], 0.6));
+          g.addColorStop(1, "rgba(0,0,0,0)");
+          cx.fillStyle = g;
+          cx.beginPath();
+          cx.arc(cxm, y, r, 0, Math.PI * 2);
+          cx.fill();
+        }
+        break;
+      }
+      case 2: {
+        // Windows on facade (unused by mapping, kept for variety)
+        const warm = ["#ffd166", "#ffe9a9", "#fff2c8"];
+        const cols = 2, rows = 2;
+        for (let j = 0; j < rows; j++) {
+          for (let i = 0; i < cols; i++) {
+            const wx = Math.floor(size * (0.18 + i * 0.38));
+            const wy = Math.floor(size * (0.18 + j * 0.38));
+            const ww = Math.max(2, Math.floor(size * 0.18));
+            const wh = ww;
+            const g = cx.createLinearGradient(0, wy, 0, wy + wh);
+            g.addColorStop(0, rgba(warm[(i + j) % warm.length], 0.95));
+            g.addColorStop(1, rgba("#ff9f1a", 0.5));
+            cx.fillStyle = g;
+            cx.fillRect(wx, wy, ww, wh);
+          }
+        }
+        break;
+      }
+      case 3: {
+        // Luxury headlights front + chrome grille (distinct from street)
+        cx.globalCompositeOperation = "source-over";
+        // Deep night base
+        const night = cx.createLinearGradient(0, 0, 0, size);
+        night.addColorStop(0, rgba("#071421", 1));
+        night.addColorStop(1, rgba("#0b2236", 1));
+        cx.fillStyle = night;
+        cx.fillRect(0, 0, size, size);
+
+        // Headlights (left/right)
+        cx.globalCompositeOperation = "lighter";
+        const off = Math.max(3, Math.floor(size * 0.18));
+        const hy = Math.floor(size * 0.55);
+        const light = (lx: number) => {
+          const g = cx.createRadialGradient(lx, hy, 0, lx, hy, size * 0.6);
+          g.addColorStop(0.0, rgba("#ffffff", 0.95));
+          g.addColorStop(0.2, rgba("#d9f7ff", 0.8));
+          g.addColorStop(1.0, "rgba(0,0,0,0)");
+          cx.fillStyle = g;
+          cx.beginPath(); cx.arc(lx, hy, size * 0.28, 0, Math.PI * 2); cx.fill();
+        };
+        light(off); light(size - off);
+
+        // Chrome grille bars
+        cx.globalCompositeOperation = "source-over";
+        const bars = 4 + (orient % 2);
+        for (let i = 0; i < bars; i++) {
+          const gy = Math.floor(size * (0.25 + i * 0.12));
+          const g = cx.createLinearGradient(0, gy, size, gy);
+          g.addColorStop(0, rgba("#e7eef5", 0.9));
+          g.addColorStop(0.5, rgba("#8ea3b3", 0.9));
+          g.addColorStop(1, rgba("#dfe7ef", 0.9));
+          cx.fillStyle = g;
+          cx.fillRect(2, gy, size - 4, 1.6);
+        }
+
+        // Center emblem
+        cx.fillStyle = rgba("#c0d7ea", 0.9);
+        cx.beginPath(); cx.arc(size / 2, Math.floor(size * 0.42), Math.max(0.8, size * 0.08), 0, Math.PI * 2); cx.fill();
+        break;
+      }
+      case 4: {
+        // Night sky: crisp stars + crescent moon (more iconic)
+        cx.globalCompositeOperation = "source-over";
+        const sky = cx.createLinearGradient(0, 0, 0, size);
+        sky.addColorStop(0, rgba("#061427", 1));
+        sky.addColorStop(1, rgba("#0b1e33", 1));
+        cx.fillStyle = sky;
+        cx.fillRect(0, 0, size, size);
+
+        // Stars (spiky)
+        function star(x: number, y: number, r: number) {
+          cx.save();
+          cx.translate(x, y);
+          cx.globalCompositeOperation = "lighter";
+          const g = cx.createRadialGradient(0, 0, 0, 0, 0, r * 2);
+          g.addColorStop(0, rgba("#ffffff", 1));
+          g.addColorStop(1, "rgba(255,255,255,0)");
+          cx.fillStyle = g;
+          cx.beginPath(); cx.arc(0, 0, r, 0, Math.PI * 2); cx.fill();
+          cx.strokeStyle = rgba("#e8f4ff", 0.9);
+          cx.lineWidth = 0.8;
+          cx.beginPath(); cx.moveTo(-r*1.4, 0); cx.lineTo(r*1.4, 0); cx.stroke();
+          cx.beginPath(); cx.moveTo(0, -r*1.4); cx.lineTo(0, r*1.4); cx.stroke();
+          cx.restore();
+        }
+        star(size * 0.22, size * 0.22, Math.max(0.8, size * 0.08));
+        star(size * 0.70, size * 0.30, Math.max(0.7, size * 0.07));
+        star(size * 0.50, size * 0.75, Math.max(0.6, size * 0.06));
+
+        // Crescent moon (filled)
+        const mx = size * 0.80; const my = size * 0.26; const mr = size * 0.12;
+        cx.fillStyle = rgba("#f3fbff", 0.95);
+        cx.beginPath(); cx.arc(mx, my, mr, 0, Math.PI * 2); cx.fill();
+        cx.globalCompositeOperation = "destination-out";
+        cx.beginPath(); cx.arc(mx + mr * 0.35, my - mr * 0.1, mr, 0, Math.PI * 2); cx.fill();
+        cx.globalCompositeOperation = "source-over";
+        break;
+      }
+      case 5: {
+        // BRICKS: clear brick-red pattern with mortar gaps
+        cx.globalCompositeOperation = "source-over";
+        // Mortar background
+        cx.fillStyle = rgba("#f2d6c9", 0.95);
+        cx.fillRect(0, 0, size, size);
+        const gap = Math.max(1, Math.floor(size * 0.06));
+        const cols = 3;
+        const rows = 2;
+        const brickW = Math.floor((size - gap * (cols + 1)) / cols);
+        const brickH = Math.floor((size - gap * (rows + 1)) / rows);
+        for (let r = 0; r < rows; r++) {
+          const offset = r % 2 === 1 ? Math.floor(brickW / 2) : 0; // staggered
+          for (let ccol = -1; ccol < cols + 1; ccol++) {
+            const bx = gap + ccol * (brickW + gap) + offset;
+            const by = gap + r * (brickH + gap);
+            if (bx + brickW < 0 || bx > size - gap) continue;
+            const g = cx.createLinearGradient(0, by, 0, by + brickH);
+            g.addColorStop(0, rgba("#e87950", 0.98));
+            g.addColorStop(1, rgba("#8b2c1f", 0.98));
+            cx.fillStyle = g;
+            cx.fillRect(bx, by, brickW, brickH);
+            // Brick edge darkening
+            cx.strokeStyle = rgba("#5a1c14", 0.65);
+            cx.lineWidth = 0.6;
+            cx.strokeRect(bx + 0.3, by + 0.3, brickW - 0.6, brickH - 0.6);
+          }
+        }
+        break;
+      }
+      case 6: {
+        // PIPES: metallic chrome tube with clamp bands and bolts
+        cx.globalCompositeOperation = "source-over";
+        const m = Math.max(2, Math.floor(size * 0.12));
+        const ry = Math.max(3, Math.floor(m * 0.6));
+        // Base chrome gradient
+        const pipe = cx.createLinearGradient(0, 0, 0, size);
+        pipe.addColorStop(0, rgba("#dfe9f3", 0.98));
+        pipe.addColorStop(0.4, rgba("#9fb6c8", 0.98));
+        pipe.addColorStop(0.6, rgba("#e8f2fb", 0.98));
+        pipe.addColorStop(1, rgba("#7b92a4", 0.98));
+        cx.fillStyle = pipe;
+        roundedRectPath(cx, m, Math.floor(m * 0.3), size - 2 * m, size - Math.floor(m * 0.6), ry);
+        cx.fill();
+        // Specular highlights
+        const spec = cx.createLinearGradient(0, 0, 0, size);
+        spec.addColorStop(0.2, rgba("#ffffff", 0.65));
+        spec.addColorStop(0.5, rgba("#ffffff", 0.0));
+        spec.addColorStop(0.8, rgba("#ffffff", 0.45));
+        cx.fillStyle = spec;
+        cx.fillRect(m + 1, Math.floor(m * 0.35), Math.max(2, Math.floor((size - 2 * m) * 0.12)), size - Math.floor(m * 0.7));
+        // Clamp bands
+        const bandY1 = Math.floor(size * 0.35);
+        const bandY2 = Math.floor(size * 0.65);
+        cx.fillStyle = rgba("#3e4f5b", 0.9);
+        cx.fillRect(m, bandY1, size - 2 * m, 2);
+        cx.fillRect(m, bandY2, size - 2 * m, 2);
+        // Bolts on bands
+        cx.fillStyle = rgba("#cfd9e3", 0.95);
+        const boltR = Math.max(0.8, size * 0.06);
+        const boltOffset = Math.max(3, Math.floor((size - 2 * m) * 0.25));
+        const centers = [m + boltOffset, size - m - boltOffset];
+        for (const cxp of centers) {
+          cx.beginPath(); cx.arc(cxp, bandY1 + 1, boltR, 0, Math.PI * 2); cx.fill();
+          cx.beginPath(); cx.arc(cxp, bandY2 + 1, boltR, 0, Math.PI * 2); cx.fill();
+        }
+        break;
+      }
+      case 7: {
+        // Skyscraper facade: vertical warm windows columns
+        cx.globalCompositeOperation = "source-over";
+        const facade = cx.createLinearGradient(0, 0, 0, size);
+        facade.addColorStop(0, rgba("#0b2236", 1));
+        facade.addColorStop(1, rgba("#143c5e", 1));
+        cx.fillStyle = facade;
+        cx.fillRect(0, 0, size, size);
+        const cols = 3;
+        for (let i = 0; i < cols; i++) {
+          const wx = Math.floor(size * (0.12 + i * 0.28));
+          const ww = Math.max(2, Math.floor(size * 0.12));
+          for (let j = 0; j < 3; j++) {
+            const wy = Math.floor(size * (0.12 + j * 0.28));
+            const wh = Math.max(2, Math.floor(size * 0.12));
+            const warm = cx.createLinearGradient(0, wy, 0, wy + wh);
+            warm.addColorStop(0, rgba("#fff4c2", 0.95));
+            warm.addColorStop(1, rgba("#ffbd45", 0.85));
+            cx.fillStyle = warm;
+            cx.fillRect(wx, wy, ww, wh);
+          }
+        }
+        // Roof highlight
+        cx.fillStyle = rgba("#b2e9ff", 0.35);
+        cx.fillRect(0, 1, size, 1);
+        break;
+      }
+      case 8: {
+        // Crosswalk zebra: bold white stripes on asphalt + cat's eye reflectors
+        cx.globalCompositeOperation = "source-over";
+        const asphalt = cx.createLinearGradient(0, 0, 0, size);
+        asphalt.addColorStop(0, rgba("#0d141b", 1));
+        asphalt.addColorStop(1, rgba("#15202a", 1));
+        cx.fillStyle = asphalt;
+        cx.fillRect(0, 0, size, size);
+
+        // Stripes (horizontal), slight shift with orient
+        const shift = (orient % 3) * Math.max(1, Math.floor(size * 0.05));
+        const stripeH = Math.max(3, Math.floor(size * 0.22));
+        for (let y = -stripeH * 2 + shift; y < size + stripeH; y += stripeH * 2) {
+          const g = cx.createLinearGradient(0, y, 0, y + stripeH);
+          g.addColorStop(0, rgba("#ffffff", 0.98));
+          g.addColorStop(1, rgba("#e2ecf5", 0.98));
+          cx.fillStyle = g;
+          cx.fillRect(0, y, size, stripeH);
+        }
+
+        // Cat's eye reflectors (small warm dots near edges)
+        cx.globalCompositeOperation = "lighter";
+        const dots = [
+          [size * 0.12, size * 0.9],
+          [size * 0.88, size * 0.1],
+        ];
+        for (const [dx, dy] of dots) {
+          const dg = cx.createRadialGradient(dx, dy, 0, dx, dy, size * 0.12);
+          dg.addColorStop(0, rgba("#ffd166", 1));
+          dg.addColorStop(1, rgba("#ff9f1a", 0));
+          cx.fillStyle = dg;
+          cx.beginPath();
+          cx.arc(dx, dy, size * 0.06, 0, Math.PI * 2);
+          cx.fill();
+        }
+        break;
+      }
+    }
+
+    // Outer rim glow for cohesive neon look
+    cx.globalCompositeOperation = "source-over";
+    cx.shadowColor = rgba(pal.primary, 0.75);
+    cx.shadowBlur = 10;
+    cx.strokeStyle = rgba(pal.primary, 0.95);
+    cx.lineWidth = 1.4;
+    cx.strokeRect(1, 1, size - 2, size - 2);
+    cx.shadowBlur = 0;
+
+    cx.restore();
+  } else if (theme === "aurora") {
+    // Aurora variants: ribbon / flare / facet (deterministic by variant)
+    cx.save();
+    roundedRectPath(cx, 0.5, 0.5, size - 1, size - 1, Math.max(3, Math.floor(size * 0.24)));
+    cx.clip();
+
+    const pal = THEME_PALETTES.aurora;
+
+    // Bright diagonal base
+    const diag = cx.createLinearGradient(0, 0, size, size);
+    diag.addColorStop(0, rgba(pal.primary, 0.95));
+    diag.addColorStop(1, rgba(pal.secondary, 0.85));
+    cx.fillStyle = diag;
+    cx.fillRect(0, 0, size, size);
+
+    // Variant overlays
+    cx.globalCompositeOperation = "lighter";
+    if (variant === 0) {
+      // Ribbon: two glowing S-curves
+      cx.save();
+      cx.translate(size / 2, size / 2);
+      cx.rotate(-Math.PI / 8);
+      cx.lineWidth = 1.4;
+      const ribbonG = cx.createLinearGradient(-size, 0, size, 0);
+      ribbonG.addColorStop(0, rgba("#ffffff", 0.4));
+      ribbonG.addColorStop(1, rgba(pal.secondary, 0.6));
+      cx.strokeStyle = ribbonG;
+      cx.beginPath();
+      cx.moveTo(-size * 0.6, -size * 0.2);
+      cx.quadraticCurveTo(0, -size * 0.5, size * 0.6, size * 0.2);
+      cx.stroke();
+      cx.beginPath();
+      cx.moveTo(-size * 0.6, size * 0.2);
+      cx.quadraticCurveTo(0, size * 0.5, size * 0.6, -size * 0.2);
+      cx.stroke();
+      cx.restore();
+    } else if (variant === 1) {
+      // Flare: radial starburst center
+      const star = cx.createRadialGradient(size * 0.5, size * 0.45, 0, size * 0.5, size * 0.45, size * 0.9);
+      star.addColorStop(0, rgba("#ffffff", 0.45));
+      star.addColorStop(1, "rgba(0,0,0,0)");
+      cx.fillStyle = star;
+      cx.fillRect(0, 0, size, size);
+    } else {
+      // Facet: criss-cross bright facets
+      const f1 = cx.createLinearGradient(0, size, size, 0);
+      f1.addColorStop(0.3, rgba("#ffffff", 0));
+      f1.addColorStop(0.5, rgba(pal.primary, 0.6));
+      f1.addColorStop(0.7, rgba("#ffffff", 0));
+      cx.fillStyle = f1;
+      cx.fillRect(0, 0, size, size);
+
+      const f2 = cx.createLinearGradient(size, 0, 0, size);
+      f2.addColorStop(0.3, rgba("#ffffff", 0));
+      f2.addColorStop(0.5, rgba(pal.secondary, 0.55));
+      f2.addColorStop(0.7, rgba("#ffffff", 0));
+      cx.fillStyle = f2;
+      cx.fillRect(0, 0, size, size);
+    }
+
+    // Stronger piece tint to keep identity
+    cx.fillStyle = rgba(colorHex, 0.32);
+    cx.fillRect(0, 0, size, size);
+
+    // Inner crisp rim with gradient
+    cx.globalCompositeOperation = "source-over";
+    const rim = cx.createLinearGradient(0, 0, size, size);
+    rim.addColorStop(0, rgba(pal.primary, 1));
+    rim.addColorStop(1, rgba(pal.secondary, 1));
+    cx.strokeStyle = rim;
+    cx.lineWidth = 1;
+    cx.strokeRect(0.5, 0.5, size - 1, size - 1);
+    cx.restore();
+  }
+
+  tileCache.set(key, c);
+  return c;
 }
 
 function roundedRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -407,4 +846,25 @@ function rgba(hex: string, alpha: number): string {
   if (hex.startsWith("rgba") || hex.startsWith("rgb")) return hex; // passed as rgba already
   const { r, g, b } = hexToRgb(hex);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function cityscapeMotifForPiece(type?: TetrominoType): number {
+  switch (type) {
+    case "I":
+      return 8; // crosswalk zebra (clar și iconic)
+    case "J":
+      return 1; // traffic light
+    case "L":
+      return 6; // pipes (țevi industriale)
+    case "O":
+      return 5; // bricks + warm
+    case "S":
+      return 4; // stars + moon
+    case "T":
+      return 7; // skyscraper facade
+    case "Z":
+      return 0; // neon billboard/sign
+    default:
+      return 0;
+  }
 }
