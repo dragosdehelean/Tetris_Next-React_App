@@ -27,95 +27,95 @@ export function ControlsOverlay() {
 
   return (
     <Stack
-      gap={1.5}
+      gap={1}
       direction="row"
       data-testid="controls-overlay"
       sx={{ 
         display: { xs: "flex", md: "none" }, 
         flexWrap: "wrap", 
         justifyContent: "center",
-        px: 1 
+        px: 0.5
       }}
     >
       {/* Movement controls */}
-      <Stack direction="row" gap={1} sx={{ order: 1 }}>
+      <Stack direction="row" gap={0.8} sx={{ order: 1 }}>
         <Button 
-          size="medium" 
+          size="small" 
           variant="outlined" 
           onClick={() => isRunning && dispatch(moveLeft())} 
           aria-label="left"
-          sx={{ minWidth: 48, minHeight: 48, fontSize: '1.2rem' }}
+          sx={{ minWidth: 40, minHeight: 40, fontSize: '1rem', p: 0.5 }}
         >
           ←
         </Button>
         <Button 
-          size="medium" 
+          size="small" 
           variant="outlined" 
           onClick={() => isRunning && dispatch(moveRight())} 
           aria-label="right"
-          sx={{ minWidth: 48, minHeight: 48, fontSize: '1.2rem' }}
+          sx={{ minWidth: 40, minHeight: 40, fontSize: '1rem', p: 0.5 }}
         >
           →
         </Button>
         <Button 
-          size="medium" 
+          size="small" 
           variant="outlined" 
           onClick={() => isRunning && dispatch(softDrop())} 
           aria-label="down"
-          sx={{ minWidth: 48, minHeight: 48, fontSize: '1.2rem' }}
+          sx={{ minWidth: 40, minHeight: 40, fontSize: '1rem', p: 0.5 }}
         >
           ↓
         </Button>
       </Stack>
 
       {/* Rotation controls */}
-      <Stack direction="row" gap={1} sx={{ order: 2 }}>
+      <Stack direction="row" gap={0.8} sx={{ order: 2 }}>
         <Button 
-          size="medium" 
+          size="small" 
           variant="outlined" 
           onClick={() => isRunning && dispatch(rotateCounterClockwise())} 
           aria-label="rotate-ccw"
-          sx={{ minWidth: 48, minHeight: 48, fontSize: '1.2rem' }}
+          sx={{ minWidth: 40, minHeight: 40, fontSize: '1rem', p: 0.5 }}
         >
           ↺
         </Button>
         <Button 
-          size="medium" 
+          size="small" 
           variant="outlined" 
           onClick={() => isRunning && dispatch(rotateClockwise())} 
           aria-label="rotate-cw"
-          sx={{ minWidth: 48, minHeight: 48, fontSize: '1.2rem' }}
+          sx={{ minWidth: 40, minHeight: 40, fontSize: '1rem', p: 0.5 }}
         >
           ↻
         </Button>
       </Stack>
 
       {/* Action controls */}
-      <Stack direction="row" gap={1} sx={{ order: 3 }}>
+      <Stack direction="row" gap={0.8} sx={{ order: 3 }}>
         <Button 
-          size="medium" 
+          size="small" 
           variant="contained" 
           onClick={() => isRunning && dispatch(hardDrop())} 
           aria-label="hard-drop"
-          sx={{ minWidth: 56, minHeight: 48, px: 2 }}
+          sx={{ minWidth: 46, minHeight: 40, px: 1, fontSize: '0.75rem' }}
         >
           Drop
         </Button>
         <Button 
-          size="medium" 
+          size="small" 
           variant="outlined" 
           onClick={() => isRunning && dispatch(hold())} 
           aria-label="hold"
-          sx={{ minWidth: 56, minHeight: 48, px: 2 }}
+          sx={{ minWidth: 46, minHeight: 40, px: 1, fontSize: '0.75rem' }}
         >
           Hold
         </Button>
         <Button 
-          size="medium" 
+          size="small" 
           variant="outlined" 
           onClick={onPauseToggle} 
           aria-label="pause-toggle"
-          sx={{ minWidth: 56, minHeight: 48, px: 2 }}
+          sx={{ minWidth: 46, minHeight: 40, px: 1, fontSize: '0.75rem' }}
         >
           {game.status === "paused" ? "Reia" : "Pauza"}
         </Button>

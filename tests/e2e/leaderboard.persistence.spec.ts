@@ -4,7 +4,7 @@ test.describe("Leaderboard@Persistence", () => {
   test("game over saves score and persists across reload", async ({ page }) => {
     await page.goto("/?test=1");
 
-    await page.getByRole("button", { name: "Incepe jocul" }).click();
+    await page.getByTestId("primary-action-button").click();
     // Set a deterministic score via test controls
     await page.getByTestId("force-score").click();
     // Trigger game over

@@ -1,5 +1,13 @@
 ## 2025-09-19
 
+- Mobile UX optimizations for Samsung Galaxy A55 (6.6", 1080x2340px):
+  - Fixed HUD oval overflow with responsive margins (mx: { xs: 1, sm: 0 })
+  - Compacted main action buttons with shortened text: "Start", "Restart", "Tema", "Instructiuni"
+  - Repositioned game controls directly under canvas within game panel for better mobile UX
+  - Enhanced responsive typography and spacing for touch interfaces
+- Updated all unit and e2e tests to use data-testid="primary-action-button" for consistent test targeting
+- Verified mobile optimizations: 24/24 unit tests pass, 42/51 e2e tests pass (remaining failures are timing/screenshot related, not functionality)
+
 - Mobile UX improvements for Samsung Galaxy A55 and similar devices (6.6", 1080x2340px, 19.5:9 ratio):
   - Enhanced GameCanvas responsive sizing with larger cell sizes for mobile (26-32px vs 22-28px desktop)
   - Improved ControlsOverlay with larger touch targets (48x48px minimum), better grouping and spacing

@@ -4,7 +4,7 @@ test.describe("StartGame@Classic", () => {
   test("clicking Start switches button to Pauza", async ({ page }) => {
     await page.goto("/");
 
-    const startBtn = page.getByRole("button", { name: "Incepe jocul" });
+    const startBtn = page.getByTestId("primary-action-button");
     await expect(startBtn).toBeVisible();
     await startBtn.click();
 

@@ -5,7 +5,7 @@ const TYPES = ["S", "Z", "L", "J"] as const;
 for (const t of TYPES) {
   test(`RotationScreenshots@${t}`, async ({ page }, testInfo) => {
     await page.goto("/?test=1");
-    await page.getByRole("button", { name: "Incepe jocul" }).click();
+    await page.getByTestId("primary-action-button").click();
     await page.getByTestId(`debug-set-${t.toLowerCase()}`).click();
 
     const canvas = page.getByTestId("game-canvas");

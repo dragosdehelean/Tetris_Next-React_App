@@ -9,7 +9,7 @@ describe("Instructions dialog", () => {
     const user = userEvent.setup();
     const { store } = renderWithProviders(<GameDashboard />);
 
-    await user.click(screen.getByRole("button", { name: "Incepe jocul" }));
+    await user.click(screen.getByTestId("primary-action-button"));
     expect(store.getState().game.status).toBe("running");
 
     await user.click(screen.getByTestId("instructions-open"));

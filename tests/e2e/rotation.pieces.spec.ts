@@ -10,7 +10,7 @@ function parseRot(text: string) {
 for (const t of TYPES) {
   test(`RotationIndex@${t}`, async ({ page }) => {
     await page.goto("/?test=1");
-    await page.getByRole("button", { name: "Incepe jocul" }).click();
+    await page.getByTestId("primary-action-button").click();
     await page.getByTestId(`debug-set-${t.toLowerCase()}`).click();
 
     const debug = page.getByTestId("debug-rotation");

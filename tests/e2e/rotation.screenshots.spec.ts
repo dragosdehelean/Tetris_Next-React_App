@@ -8,7 +8,7 @@ function parseRotationText(text: string) {
 test.describe("RotationScreenshots", () => {
   test("capture successive rotations for T piece", async ({ page }, testInfo) => {
     await page.goto("/?test=1");
-    await page.getByRole("button", { name: "Incepe jocul" }).click();
+    await page.getByTestId("primary-action-button").click();
     await page.getByTestId("debug-set-t").click();
 
     const canvas = page.getByTestId("game-canvas");

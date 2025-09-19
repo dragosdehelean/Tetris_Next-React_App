@@ -9,7 +9,7 @@ function parseRotationText(text: string) {
 test.describe("Rotation@Keys", () => {
   test("ArrowUp rotates visually CW (index -1), PageUp rotates visually CCW (index +1)", async ({ page }) => {
     await page.goto("/?test=1");
-    await page.getByRole("button", { name: "Incepe jocul" }).click();
+    await page.getByTestId("primary-action-button").click();
 
     const debug = page.getByTestId("debug-rotation");
     await expect(debug).toBeVisible();

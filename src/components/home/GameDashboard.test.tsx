@@ -12,10 +12,10 @@ describe("GameDashboard", () => {
     const { store } = renderWithProviders(<GameDashboard />);
 
     expect(screen.getByText(/Tetris Odyssey/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Incepe jocul" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Schimba tema/ })).toBeInTheDocument();
+    expect(screen.getByTestId("primary-action-button")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tema" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Incepe jocul" }));
+    await user.click(screen.getByTestId("primary-action-button"));
 
     const state = store.getState().game;
     expect(state.status).toBe("running");
@@ -32,7 +32,7 @@ describe("GameDashboard", () => {
       store.dispatch(pauseGame());
     });
 
-    const resumeButton = await screen.findByRole("button", { name: "Reia jocul" });
+    const resumeButton = await screen.findByTestId("primary-action-button");
     await user.click(resumeButton);
 
     expect(store.getState().game.status).toBe("running");

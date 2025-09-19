@@ -37,11 +37,11 @@ export function GameDashboard() {
       case "running":
         return { label: "Pauza", onClick: () => dispatch(pauseGame()) } as const;
       case "paused":
-        return { label: "Reia jocul", onClick: () => dispatch(resumeGame()) } as const;
+        return { label: "Reia", onClick: () => dispatch(resumeGame()) } as const;
       case "gameOver":
-        return { label: "Reporneste", onClick: () => dispatch(startGame({ difficulty: game.difficulty })) } as const;
+        return { label: "Restart", onClick: () => dispatch(startGame({ difficulty: game.difficulty })) } as const;
       default:
-        return { label: "Incepe jocul", onClick: () => dispatch(startGame({ difficulty: game.difficulty })) } as const;
+        return { label: "Start", onClick: () => dispatch(startGame({ difficulty: game.difficulty })) } as const;
     }
   }, [dispatch, game.difficulty, game.status]);
 
@@ -71,11 +71,11 @@ export function GameDashboard() {
   }, [addScore, dispatch, game.difficulty, game.frame]);
 
   return (
-    <Stack gap={2.5} sx={{ maxWidth: 600, mx: "auto", textAlign: "center", py: { xs: 2, md: 8 }, px: { xs: 1, sm: 0 } }}>
-      <Stack gap={1}>
-        <Chip label={`Dificultate: ${game.difficulty}`} color="secondary" variant="outlined" sx={{ fontWeight: 600, alignSelf: "center", fontSize: { xs: '0.8rem', sm: '0.875rem' } }} />
-        <Typography component="h1" variant="h3" fontWeight={700} sx={{ fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' } }}>Tetris Odyssey</Typography>
-        <Typography color="text.secondary" sx={{ fontSize: { xs: 13, sm: 16 }, px: { xs: 1, sm: 0 } }}>MVP Tetris cu dificultăți adaptabile și performanță ridicată. Apasă Start și intră în joc.</Typography>
+    <Stack gap={2} sx={{ maxWidth: 600, mx: "auto", textAlign: "center", py: { xs: 1.5, md: 8 }, px: { xs: 1, sm: 0 } }}>
+      <Stack gap={0.8}>
+        <Chip label={`Dificultate: ${game.difficulty}`} color="secondary" variant="outlined" sx={{ fontWeight: 600, alignSelf: "center", fontSize: { xs: '0.75rem', sm: '0.875rem' } }} />
+        <Typography component="h1" variant="h3" fontWeight={700} sx={{ fontSize: { xs: '1.5rem', sm: '2.5rem', md: '3rem' } }}>Tetris Odyssey</Typography>
+        <Typography color="text.secondary" sx={{ fontSize: { xs: 12, sm: 16 }, px: { xs: 0.5, sm: 0 } }}>MVP Tetris cu dificultăți adaptabile și performanță ridicată. Apasă Start și intră în joc.</Typography>
       </Stack>
 
       {/* Panou joc cu HUD sub canvas */}
@@ -97,13 +97,14 @@ export function GameDashboard() {
         <Box
           sx={{
             mt: 1,
+            mx: { xs: 1, sm: 0 }, // Add horizontal margin for mobile
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: { xs: 0.8, sm: 1 },
+            gap: { xs: 0.6, sm: 1 },
             flexWrap: "wrap",
-            px: { xs: 1, sm: 1.2 },
-            py: { xs: 0.4, sm: 0.6 },
+            px: { xs: 0.8, sm: 1.2 },
+            py: { xs: 0.3, sm: 0.6 },
             borderRadius: 999,
             border: "1px solid var(--board-border-color)",
             boxShadow: "0 0 12px var(--board-border-glow)",
@@ -114,29 +115,28 @@ export function GameDashboard() {
           <HudStat label="Nivel" value={level.toString()} />
           <HudStat label="Linii" value={linesCleared.toString()} />
         </Box>
+        
+        {/* Game controls directly under canvas for mobile */}
+        <Box sx={{ display: { xs: "block", md: "none" }, mt: 1.5 }}>
+          <ControlsOverlay />
+        </Box>
       </Box>
 
-      {/* Rând de controale dedesubtul jocului, compact și fără text pe două rânduri */}
-      <Stack direction={{ xs: "column", sm: "row" }} gap={{ xs: 1, sm: 1.2 }} justifyContent="center" alignItems="center" sx={{ mt: 0, px: { xs: 1, sm: 0 } }}>
-        <Button variant="contained" size="large" color="primary" onClick={primaryCta.onClick} sx={{ alignSelf: "center", px: 5, whiteSpace: "nowrap", minHeight: 48 }}>
+      {/* Main action buttons - compact single row for mobile */}
+      <Stack direction="row" gap={{ xs: 1, sm: 1.2 }} justifyContent="center" alignItems="center" flexWrap="wrap" sx={{ mt: 0, px: { xs: 1, sm: 0 } }}>
+        <Button variant="contained" size="medium" color="primary" onClick={primaryCta.onClick} data-testid="primary-action-button" sx={{ px: 3, minHeight: 44, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
           {primaryCta.label}
         </Button>
-        <Button variant="outlined" color="secondary" onClick={handleRestart} data-testid="restart-button" sx={{ px: 4, whiteSpace: "nowrap", minHeight: 44 }}>
-          Restart (salvare)
+        <Button variant="outlined" color="secondary" size="medium" onClick={handleRestart} data-testid="restart-button" sx={{ px: 2.5, minHeight: 44, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+          Restart
         </Button>
-        <Button variant="outlined" color="secondary" onClick={handleThemeSwitch} data-testid="theme-switch" sx={{ px: 4, whiteSpace: "nowrap", minHeight: 44 }}>
-          Schimba tema
+        <Button variant="outlined" color="secondary" size="medium" onClick={handleThemeSwitch} data-testid="theme-switch" sx={{ px: 2.5, minHeight: 44, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+          Tema
         </Button>
-        <Box sx={{ display: "flex" }}>
-          <InstructionsButton />
-        </Box>
+        <InstructionsButton />
       </Stack>
 
-      <Box sx={{ display: { xs: "block", md: "none" } }}>
-        <ControlsOverlay />
-      </Box>
-
-      <Typography variant="body2" color="text.secondary">Tema curenta: {themeMeta.label} - {themeMeta.description}</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Tema: {themeMeta.label}</Typography>
 
       <SettingsPanel />
       <LeaderboardPanel />

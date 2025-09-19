@@ -11,7 +11,7 @@ describe("GameCanvas controls", () => {
     const user = userEvent.setup();
     const { store } = renderWithProviders(<GameDashboard />);
 
-    await user.click(screen.getByRole("button", { name: "Incepe jocul" }));
+    await user.click(screen.getByTestId("primary-action-button"));
 
     const before = store.getState().game.frame?.activePiece?.position.x ?? 0;
     await user.keyboard("{ArrowLeft}");
