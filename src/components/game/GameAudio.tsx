@@ -6,11 +6,18 @@ import { selectGameState } from "@/features/game/gameSlice";
 import { selectMuted, selectVolume } from "@/features/settings/settingsSlice";
 import { selectThemeName } from "@/features/theme/themeSlice";
 
+// Type for AudioContext constructor
+interface WindowWithAudio extends Window {
+  AudioContext?: typeof AudioContext;
+  webkitAudioContext?: typeof AudioContext;
+}
+
 function useAudio() {
   const ctxRef = useRef<AudioContext | null>(null);
   const ensure = () => {
     if (!ctxRef.current) {
-      const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      const windowWithAudio = window as WindowWithAudio;
+      const Ctx = windowWithAudio.AudioContext || windowWithAudio.webkitAudioContext;
       ctxRef.current = Ctx ? new Ctx() : null;
     }
     return ctxRef.current;

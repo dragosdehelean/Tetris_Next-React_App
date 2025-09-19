@@ -6,27 +6,6 @@ export interface SettingsState {
   ghostPiece: boolean;
 }
 
-const readNumber = (key: string, def: number) => {
-  try {
-    const v = localStorage.getItem(key);
-    if (v == null) return def;
-    const n = Number(v);
-    return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : def;
-  } catch {
-    return def;
-  }
-};
-
-const readBool = (key: string, def: boolean) => {
-  try {
-    const v = localStorage.getItem(key);
-    if (v == null) return def;
-    return v === "true";
-  } catch {
-    return def;
-  }
-};
-
 const initialState: SettingsState = {
   volume: 0.6,
   muted: false,

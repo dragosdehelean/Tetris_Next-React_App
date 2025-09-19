@@ -19,6 +19,25 @@ import {
 import { getPieceCells } from "@/features/game/engine/piece";
 import type { TetrominoType } from "@/features/game/engine/tetromino";
 import { getDroppedCoordinates } from "@/features/game/engine/board";
+
+// Type for line-clear effect tracking
+interface LineClearTracker {
+  last: number;
+  t?: number;
+}
+
+// Extended window interface for line-clear tracking
+interface WindowWithLineClear extends Window {
+  __lc?: LineClearTracker;
+}
+
+// Type for ResizeObserver entry
+interface ResizeObserverEntryWithContentRect {
+  contentRect: {
+    width: number;
+    height: number;
+  };
+}
 import { selectGhostPiece } from "@/features/settings/settingsSlice";
 import { selectThemeName } from "@/features/theme/themeSlice";
 import { THEME_PALETTES, type ThemeName } from "@/features/theme/themeOptions";
@@ -109,11 +128,11 @@ export function GameCanvas() {
       if (Number.isFinite(next) && next !== cellSize) setCellSize(next);
     };
 
-    if (typeof window !== "undefined" && (window as any).ResizeObserver) {
-      const RObs: typeof ResizeObserver = (window as any).ResizeObserver;
-      ro = new RObs((entries) => {
+    if (typeof window !== "undefined" && window.ResizeObserver) {
+      ro = new ResizeObserver((entries) => {
         for (const entry of entries) {
-          const cw = Math.max(0, (entry as any).contentRect?.width || parent.clientWidth || 0);
+          const entryWithContentRect = entry as ResizeObserverEntryWithContentRect;
+          const cw = Math.max(0, entryWithContentRect.contentRect?.width || parent.clientWidth || 0);
           if (cw > 0) handleSize(cw);
         }
       });
@@ -125,7 +144,11 @@ export function GameCanvas() {
     onResize();
     return () => {
       window.removeEventListener("resize", onResize);
-      try { ro && ro.disconnect(); } catch {}
+      try { 
+        if (ro) ro.disconnect(); 
+      } catch {
+        // Ignore disconnect errors
+      }
     };
   }, [cols, padding, cellSize]);
 
@@ -179,7 +202,7 @@ export function GameCanvas() {
       }
     };
     window.addEventListener("keydown", onKeyDown, { passive: false });
-    return () => window.removeEventListener("keydown", onKeyDown as any);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [dispatch, game.status]);
 
   useEffect(() => {
@@ -249,13 +272,14 @@ export function GameCanvas() {
 
     // Line-clear pulse overlay (theme-colored, quick fade)
     if (typeof performance !== "undefined") {
-      (window as any).__lc = (window as any).__lc || { last: 0 };
-      const last = (window as any).__lc.last as number;
+      const windowWithLC = window as WindowWithLineClear;
+      windowWithLC.__lc = windowWithLC.__lc || { last: 0 };
+      const last = windowWithLC.__lc.last;
       if (frame.clearedLines > last) {
-        (window as any).__lc.t = performance.now();
-        (window as any).__lc.last = frame.clearedLines;
+        windowWithLC.__lc.t = performance.now();
+        windowWithLC.__lc.last = frame.clearedLines;
       }
-      const t0 = (window as any).__lc.t as number | undefined;
+      const t0 = windowWithLC.__lc.t;
       if (t0) {
         const elapsed = performance.now() - t0;
         const dur = 360;
@@ -265,7 +289,7 @@ export function GameCanvas() {
           const g = ctx.createLinearGradient(padding, padding, padding + cols * cellSize, padding + rows * cellSize);
           g.addColorStop(0, rgba(pal.primary, alpha));
           g.addColorStop(1, rgba(pal.secondary, alpha));
-          ctx.fillStyle = g as any;
+          ctx.fillStyle = g;
           ctx.fillRect(padding, padding, cols * cellSize, rows * cellSize);
         }
       }
@@ -313,7 +337,7 @@ export function GameCanvas() {
       ctx.fill();
     }
     ctx.restore();
-  }, [frame, width, height, cols, rows, ghostEnabled, themeName]);
+  }, [frame, width, height, cols, rows, ghostEnabled, themeName, cellSize]);
 
   return (
     <canvas

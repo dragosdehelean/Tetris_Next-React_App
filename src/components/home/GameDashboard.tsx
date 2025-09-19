@@ -145,29 +145,6 @@ export function GameDashboard() {
   );
 }
 
-interface StatCardProps { label: string; value: string; compact?: boolean }
-
-function StatCard({ label, value, compact = false }: StatCardProps) {
-  return (
-    <Stack
-      gap={0.5}
-      sx={{
-        minWidth: compact ? 72 : 160,
-        px: compact ? 1 : 3,
-        py: compact ? 0.6 : 2,
-        borderRadius: 6, // colțuri mai rotunjite (efect de "chip" mare)
-        border: "1px solid",
-        borderColor: "var(--color-panel-border)",
-        background: "var(--color-card-gradient)",
-        boxShadow: `0 0 ${compact ? 12 : 28}px var(--color-card-shadow)`,
-      }}
-    >
-      <Typography variant="caption" color="text.secondary" letterSpacing={0.8}>{label}</Typography>
-      <Typography variant={compact ? "subtitle2" : "h5"} fontWeight={700}>{value}</Typography>
-    </Stack>
-  );
-}
-
 function HudStat({ label, value }: { label: string; value: string }) {
   return (
     <Stack direction="row" alignItems="baseline" gap={0.5} sx={{ px: 0.5 }}>
