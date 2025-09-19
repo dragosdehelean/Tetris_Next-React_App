@@ -21,6 +21,7 @@ import type { TetrominoType } from "@/features/game/engine/tetromino";
 import { getDroppedCoordinates } from "@/features/game/engine/board";
 import { selectGhostPiece } from "@/features/settings/settingsSlice";
 import { selectThemeName } from "@/features/theme/themeSlice";
+import { THEME_PALETTES, type ThemeName } from "@/features/theme/themeOptions";
 
 const COLORS: Record<TetrominoType, string> = {
   I: "#00e5ff",
@@ -238,20 +239,47 @@ export function GameCanvas() {
       }
     }
 
-    // Themed board border inside canvas (around playfield)
-    const { stroke, glow, width: lw } = boardBorderForTheme(themeName);
-    ctx.save();
-    ctx.strokeStyle = stroke;
-    ctx.lineWidth = lw;
-    if (glow) {
-      ctx.shadowColor = glow;
-      ctx.shadowBlur = 10;
-    }
+    // Themed board border inside canvas (around playfield), rounded + gradient
+    const style = boardBorderStyle(themeName as ThemeName);
     const bx = padding + 0.5;
     const by = padding + 0.5;
     const bw = cols * cellSize - 1;
     const bh = rows * cellSize - 1;
-    ctx.strokeRect(bx, by, bw, bh);
+    const radius = Math.max(4, Math.min(10, Math.floor(cellSize * 0.35)));
+
+    ctx.save();
+    roundedRectPath(ctx, bx, by, bw, bh, radius);
+    const grad = ctx.createLinearGradient(bx, by, bx + bw, by + bh);
+    grad.addColorStop(0, style.strokeA);
+    grad.addColorStop(1, style.strokeB);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = style.width;
+    ctx.shadowColor = style.glow;
+    ctx.shadowBlur = 14;
+    ctx.stroke();
+
+    // Crisp inner stroke for definition
+    roundedRectPath(ctx, bx, by, bw, bh, radius);
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = style.crisp;
+    ctx.stroke();
+
+    // Corner glow dots (subtle)
+    const dots = [
+      [bx + radius, by + radius],
+      [bx + bw - radius, by + radius],
+      [bx + radius, by + bh - radius],
+      [bx + bw - radius, by + bh - radius],
+    ] as const;
+    ctx.fillStyle = style.dot;
+    ctx.shadowColor = style.glow;
+    ctx.shadowBlur = 10;
+    for (const [dx, dy] of dots) {
+      ctx.beginPath();
+      ctx.arc(dx, dy, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
   }, [frame, width, height, cols, rows, ghostEnabled, themeName]);
 
@@ -347,14 +375,36 @@ function drawCellByTheme(
   ctx.strokeRect(px + 0.5, py + 0.5, s - 1, s - 1);
 }
 
-function boardBorderForTheme(theme: string): { stroke: string; glow?: string; width: number } {
-  switch (theme) {
-    case "cityscape":
-      return { stroke: "rgba(0, 194, 255, 0.85)", glow: "rgba(0, 194, 255, 0.45)", width: 2 };
-    case "aurora":
-      return { stroke: "rgba(96, 211, 148, 0.9)", glow: "rgba(96, 211, 148, 0.45)", width: 2 };
-    case "neon":
-    default:
-      return { stroke: "rgba(255, 110, 199, 0.95)", glow: "rgba(255, 110, 199, 0.5)", width: 2 };
-  }
+function roundedRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  const rr = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.lineTo(x + w - rr, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+  ctx.lineTo(x + w, y + h - rr);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+  ctx.lineTo(x + rr, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+  ctx.lineTo(x, y + rr);
+  ctx.quadraticCurveTo(x, y, x + rr, y);
+}
+
+function boardBorderStyle(theme: ThemeName): { strokeA: string; strokeB: string; glow: string; crisp: string; dot: string; width: number } {
+  const pal = THEME_PALETTES[theme] ?? THEME_PALETTES.neon;
+  const a = pal.secondary; // accent
+  const b = pal.primary; // primary
+  return {
+    strokeA: rgba(a, 0.95),
+    strokeB: rgba(b, 0.95),
+    glow: rgba(a, 0.45),
+    crisp: rgba("#ffffff", 0.12),
+    dot: rgba(a, 0.9),
+    width: 2,
+  };
+}
+
+function rgba(hex: string, alpha: number): string {
+  if (hex.startsWith("rgba") || hex.startsWith("rgb")) return hex; // passed as rgba already
+  const { r, g, b } = hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
