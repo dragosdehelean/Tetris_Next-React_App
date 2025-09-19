@@ -1,5 +1,5 @@
 ﻿import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { hardDrop as engineHardDrop, holdPiece, initializeFrame, movePiece, rotateActive, softDrop as engineSoftDrop, tickFrame } from "@/features/game/engine/gameEngine";
+import { hardDrop as engineHardDrop, initializeFrame, movePiece, rotateActive, softDrop as engineSoftDrop, tickFrame } from "@/features/game/engine/gameEngine";
 import type { GameFrameState } from "@/features/game/engine/state";
 import { createSeed } from "@/features/game/engine/prng";
 import type { Difficulty, GameStatus } from "@/features/game/types";
@@ -109,12 +109,6 @@ export const gameSlice = createSlice({
       const result = rotateActive(state.frame, -1);
       updateFrame(state, result.frame);
     },
-    hold(state) {
-      if (state.status !== "running" || !state.frame) return;
-      const result = holdPiece(state.frame);
-      updateFrame(state, result.frame);
-      if (result.lockedOut) state.status = "gameOver";
-    },
     // Debug/testing helper: adjust current frame score/lines/level for test-only flows
     debugSetScore(state, action: PayloadAction<{ score?: number; linesCleared?: number; level?: number }>) {
       if (!state.frame) return;
@@ -154,7 +148,6 @@ export const {
   hardDrop,
   rotateClockwise,
   rotateCounterClockwise,
-  hold,
   debugSetScore,
   debugSetActive,
   resetGameState,

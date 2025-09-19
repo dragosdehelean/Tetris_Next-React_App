@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/features/store/hooks";
 import {
   hardDrop,
-  hold,
   moveLeft,
   moveRight,
   pauseGame,
@@ -197,10 +196,6 @@ export function GameCanvas() {
           break;
         case " ":
           dispatch(hardDrop());
-          break;
-        case "c":
-        case "C":
-          dispatch(hold());
           break;
         default:
           break;

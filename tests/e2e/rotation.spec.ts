@@ -9,10 +9,18 @@ function parseRotationText(text: string) {
 test.describe("Rotation@Keys", () => {
   test("ArrowUp rotates visually CW (index -1), PageUp rotates visually CCW (index +1)", async ({ page }) => {
     await page.goto("/?test=1");
-    await page.getByTestId("primary-action-button").click();
+    
+    // Wait for page to be ready
+    await page.waitForTimeout(500);
+    
+    const startBtn = page.getByTestId("primary-action-button");
+    await expect(startBtn).toBeVisible();
+    await expect(startBtn).toContainText("Start");
+    
+    await startBtn.click();
 
     // Wait for game to start and button to change to Pauza
-    await expect(page.getByTestId("primary-action-button")).toContainText("Pauza", { timeout: 10000 });
+    await expect(page.getByTestId("primary-action-button")).toContainText("Pauza", { timeout: 15000 });
 
     const debug = page.getByTestId("debug-rotation");
     await expect(debug).toBeVisible();

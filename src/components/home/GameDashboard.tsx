@@ -130,10 +130,25 @@ export function GameDashboard() {
         <Button variant="outlined" color="secondary" size="medium" onClick={handleRestart} data-testid="restart-button" sx={{ px: 2.5, minHeight: 44, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
           Restart
         </Button>
-        <Button variant="outlined" color="secondary" size="medium" onClick={handleThemeSwitch} data-testid="theme-switch" sx={{ px: 2.5, minHeight: 44, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-          Tema
-        </Button>
         <InstructionsButton />
+        <Button 
+          variant="outlined" 
+          color="secondary" 
+          size="medium" 
+          onClick={handleThemeSwitch} 
+          data-testid="theme-switch" 
+          sx={{ 
+            px: 3, 
+            minHeight: 44, 
+            fontSize: { xs: '0.875rem', sm: '1rem' },
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+          }}
+        >
+          Schimbă tema
+          <span style={{ fontSize: '0.8rem', marginLeft: '4px' }}>▼</span>
+        </Button>
       </Stack>
 
       <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Tema: {themeMeta.label}</Typography>

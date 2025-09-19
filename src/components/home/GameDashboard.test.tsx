@@ -13,7 +13,7 @@ describe("GameDashboard", () => {
 
     expect(screen.getByText(/Tetris Odyssey/i)).toBeInTheDocument();
     expect(screen.getByTestId("primary-action-button")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Tema" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Schimbă tema▼" })).toBeInTheDocument();
 
     await user.click(screen.getByTestId("primary-action-button"));
 

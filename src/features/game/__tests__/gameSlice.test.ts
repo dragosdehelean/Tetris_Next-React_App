@@ -6,7 +6,6 @@ import {
   resumeGame,
   tick,
   moveLeft,
-  hold,
   hardDrop,
 } from "@/features/game/gameSlice";
 import type { GameState } from "@/features/game/gameSlice";
@@ -60,27 +59,13 @@ describe("gameSlice", () => {
     expect(nextX).toBeLessThanOrEqual(initialX);
   });
 
-  it("locks piece after hard drop and enables hold again", () => {
+  it("locks piece after hard drop and spawns new piece", () => {
     let state = gameReducer(createState(), startGame({ seed: 33 }));
     state = gameReducer(state, hardDrop());
 
     expect(state.frame?.activePiece).not.toBeNull();
     const filledCells = state.frame?.board.flat().filter((cell) => cell !== null).length ?? 0;
     expect(filledCells).toBeGreaterThan(0);
-    expect(state.frame?.canHold).toBe(true);
-  });
-
-  it("allows holding a piece once per drop and re-enables after lock", () => {
-    let state = gameReducer(createState(), startGame({ seed: 42 }));
-    const initialType = state.frame?.activePiece?.type;
-    state = gameReducer(state, hold());
-
-    const frame = state.frame;
-    expect(frame?.holdPiece).toBe(initialType);
-    expect(frame?.canHold).toBe(false);
-
-    state = gameReducer(state, hardDrop());
-    expect(state.frame?.canHold).toBe(true);
   });
 });
 

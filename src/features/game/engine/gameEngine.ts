@@ -166,7 +166,6 @@ export const lockPiece = (frame: GameFrameState): AdvanceResult => {
       ...frame,
       board,
       activePiece: null,
-      canHold: true,
       gravityAccumulator: 0,
     },
     cleared,
@@ -223,39 +222,6 @@ export const tickFrame = (frame: GameFrameState, elapsed: number): AdvanceResult
     lockedOut: lockedOut || undefined,
     cleared: totalCleared || undefined,
   };
-};
-
-export const holdPiece = (frame: GameFrameState): AdvanceResult => {
-  if (!frame.activePiece || !frame.canHold) {
-    return { frame };
-  }
-  const currentType = frame.activePiece.type;
-  if (frame.holdPiece) {
-    const nextFrame: GameFrameState = {
-      ...frame,
-      activePiece: {
-        type: frame.holdPiece,
-        rotation: 0,
-        position: { ...SPAWN_POSITIONS[frame.holdPiece] },
-      },
-      holdPiece: currentType,
-      canHold: false,
-      gravityAccumulator: 0,
-    };
-    if (collides(nextFrame.board, getPieceCells(nextFrame.activePiece!))) {
-      return { frame: { ...nextFrame, activePiece: null }, lockedOut: true };
-    }
-    return { frame: nextFrame };
-  }
-
-  const nextFrame: GameFrameState = {
-    ...frame,
-    activePiece: null,
-    holdPiece: currentType,
-    canHold: false,
-    gravityAccumulator: 0,
-  };
-  return spawnPiece(nextFrame);
 };
 
 export const resetBoard = (seed: number, difficulty: Difficulty): AdvanceResult => initializeFrame(seed, difficulty);

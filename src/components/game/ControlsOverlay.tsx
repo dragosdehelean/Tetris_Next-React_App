@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Stack } from "@mui/material";
+import { Button, Stack, Box } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/features/store/hooks";
 import {
   moveLeft,
@@ -9,9 +9,6 @@ import {
   hardDrop,
   rotateClockwise,
   rotateCounterClockwise,
-  hold,
-  pauseGame,
-  resumeGame,
   selectGameState,
 } from "@/features/game/gameSlice";
 
@@ -20,107 +17,145 @@ export function ControlsOverlay() {
   const game = useAppSelector(selectGameState);
   const isRunning = game.status === "running";
 
-  const onPauseToggle = () => {
-    if (game.status === "running") dispatch(pauseGame());
-    else if (game.status === "paused") dispatch(resumeGame());
+  // Stiluri pentru butoanele de mișcare (triunghiuri)
+  const moveButtonStyle = {
+    minWidth: { xs: 48, sm: 52 },
+    minHeight: { xs: 48, sm: 52 },
+    borderRadius: 3,
+    fontSize: { xs: '1.4rem', sm: '1.6rem' },
+    fontWeight: 700,
+    border: '2px solid',
+    borderColor: 'primary.main',
+    background: 'rgba(255,255,255,0.08)',
+    backdropFilter: 'blur(8px)',
+    transition: 'all 0.15s ease-in-out',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    '&:hover': {
+      background: 'rgba(255,255,255,0.15)',
+      transform: 'scale(1.05)',
+    },
+    '&:active': {
+      transform: 'scale(0.95)',
+      background: 'rgba(255,255,255,0.25)',
+    },
   };
 
+  // Stiluri pentru butoanele de rotație
+  const rotateButtonStyle = {
+    ...moveButtonStyle,
+    fontSize: { xs: '1.2rem', sm: '1.4rem' },
+  };
+
+
+
   return (
-    <Stack
-      gap={1}
-      direction="row"
+    <Box
       data-testid="controls-overlay"
       sx={{ 
-        display: { xs: "flex", md: "none" }, 
-        flexWrap: "wrap", 
-        justifyContent: "center",
-        px: 0.5
+        display: { xs: "block", md: "none" },
+        width: '100%',
+        px: 1,
       }}
     >
-      {/* Movement controls */}
-      <Stack direction="row" gap={0.8} sx={{ order: 1 }}>
-        <Button 
-          size="small" 
-          variant="outlined" 
-          onClick={() => isRunning && dispatch(moveLeft())} 
-          aria-label="left"
-          sx={{ minWidth: 40, minHeight: 40, fontSize: '1rem', p: 0.5 }}
+      {/* Layout conform screenshot-ului */}
+      <Stack spacing={1.5} alignItems="center">
+        
+        {/* Rândul de sus: Stânga, Soft Drop, Dreapta */}
+        <Stack 
+          direction="row" 
+          spacing={7}
+          alignItems="center"
+          justifyContent="center"
         >
-          ←
-        </Button>
-        <Button 
-          size="small" 
-          variant="outlined" 
-          onClick={() => isRunning && dispatch(moveRight())} 
-          aria-label="right"
-          sx={{ minWidth: 40, minHeight: 40, fontSize: '1rem', p: 0.5 }}
-        >
-          →
-        </Button>
-        <Button 
-          size="small" 
-          variant="outlined" 
-          onClick={() => isRunning && dispatch(softDrop())} 
-          aria-label="down"
-          sx={{ minWidth: 40, minHeight: 40, fontSize: '1rem', p: 0.5 }}
-        >
-          ↓
-        </Button>
-      </Stack>
+          {/* Stânga */}
+          <Button 
+            variant="outlined"
+            onClick={() => isRunning && dispatch(moveLeft())} 
+            aria-label="Mișcare stânga"
+            disabled={!isRunning}
+            sx={moveButtonStyle}
+          >
+            ◀
+          </Button>
 
-      {/* Rotation controls */}
-      <Stack direction="row" gap={0.8} sx={{ order: 2 }}>
-        <Button 
-          size="small" 
-          variant="outlined" 
-          onClick={() => isRunning && dispatch(rotateCounterClockwise())} 
-          aria-label="rotate-ccw"
-          sx={{ minWidth: 40, minHeight: 40, fontSize: '1rem', p: 0.5 }}
-        >
-          ↺
-        </Button>
-        <Button 
-          size="small" 
-          variant="outlined" 
-          onClick={() => isRunning && dispatch(rotateClockwise())} 
-          aria-label="rotate-cw"
-          sx={{ minWidth: 40, minHeight: 40, fontSize: '1rem', p: 0.5 }}
-        >
-          ↻
-        </Button>
-      </Stack>
+          {/* Soft Drop */}
+          <Button 
+            variant="outlined"
+            onClick={() => isRunning && dispatch(softDrop())} 
+            aria-label="Coborâre lentă"
+            disabled={!isRunning}
+            sx={{
+              ...moveButtonStyle,
+              minWidth: { xs: 44, sm: 48 },
+              minHeight: { xs: 44, sm: 48 },
+            }}
+          >
+            ▼
+          </Button>
 
-      {/* Action controls */}
-      <Stack direction="row" gap={0.8} sx={{ order: 3 }}>
+          {/* Dreapta */}
+          <Button 
+            variant="outlined"
+            onClick={() => isRunning && dispatch(moveRight())} 
+            aria-label="Mișcare dreapta"
+            disabled={!isRunning}
+            sx={moveButtonStyle}
+          >
+            ▶
+          </Button>
+        </Stack>
+
+        {/* Rândul de jos: Rotații */}
+        <Stack 
+          direction="row" 
+          spacing={8}
+          alignItems="center"
+          justifyContent="center"
+          sx={{ width: '100%', px: 1 }}
+        >
+          <Button 
+            variant="outlined"
+            onClick={() => isRunning && dispatch(rotateCounterClockwise())} 
+            aria-label="Rotație invers acelor de ceasornic"
+            disabled={!isRunning}
+            sx={rotateButtonStyle}
+          >
+            ⟲
+          </Button>
+          
+          <Button 
+            variant="outlined"
+            onClick={() => isRunning && dispatch(rotateClockwise())} 
+            aria-label="Rotație în sensul acelor de ceasornic"
+            disabled={!isRunning}
+            sx={rotateButtonStyle}
+          >
+            ⟳
+          </Button>
+        </Stack>
+
+        {/* Hard Drop - poziționat central sub rotații */}
         <Button 
-          size="small" 
-          variant="contained" 
+          variant="contained"
+          color="secondary"
           onClick={() => isRunning && dispatch(hardDrop())} 
-          aria-label="hard-drop"
-          sx={{ minWidth: 46, minHeight: 40, px: 1, fontSize: '0.75rem' }}
+          aria-label="Plasare instantanee"
+          disabled={!isRunning}
+          sx={{
+            minWidth: { xs: 80, sm: 90 },
+            minHeight: { xs: 40, sm: 44 },
+            borderRadius: 3,
+            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+            fontWeight: 600,
+            mt: 0.5,
+          }}
         >
-          Drop
-        </Button>
-        <Button 
-          size="small" 
-          variant="outlined" 
-          onClick={() => isRunning && dispatch(hold())} 
-          aria-label="hold"
-          sx={{ minWidth: 46, minHeight: 40, px: 1, fontSize: '0.75rem' }}
-        >
-          Hold
-        </Button>
-        <Button 
-          size="small" 
-          variant="outlined" 
-          onClick={onPauseToggle} 
-          aria-label="pause-toggle"
-          sx={{ minWidth: 46, minHeight: 40, px: 1, fontSize: '0.75rem' }}
-        >
-          {game.status === "paused" ? "Reia" : "Pauza"}
+          HARD DROP
         </Button>
       </Stack>
-    </Stack>
+    </Box>
   );
 }
 

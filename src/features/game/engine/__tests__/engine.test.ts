@@ -9,7 +9,6 @@ import {
   initializeFrame,
   movePiece,
   rotateActive,
-  holdPiece,
   hardDrop,
   tickFrame,
 } from "@/features/game/engine/gameEngine";
@@ -72,7 +71,7 @@ describe("engine: gameplay", () => {
     expect(frame.queue.length).toBeGreaterThan(0);
   });
 
-  it("moves, rotates, holds and re-enables hold after lock", () => {
+  it("moves and rotates pieces", () => {
     let { frame } = initializeFrame(99, "Classic");
     frame = movePiece(frame, 1, 0).frame;
     const activeAfterMove = frame.activePiece;
@@ -80,14 +79,6 @@ describe("engine: gameplay", () => {
 
     frame = rotateActive(frame, 1).frame;
     expect(frame.activePiece?.rotation).not.toBeNull();
-
-    const held = holdPiece(frame);
-    frame = held.frame;
-    expect(frame.holdPiece).not.toBeNull();
-    expect(frame.canHold).toBe(false);
-
-    const afterLock = hardDrop(frame).frame;
-    expect(afterLock.canHold).toBe(true);
   });
 
   it("performs a hard drop and spawns a new piece", () => {

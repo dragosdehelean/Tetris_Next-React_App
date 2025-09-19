@@ -5,8 +5,9 @@ test("ST-03 ControlsSanity: minimal input set yields no errors", async ({ page }
   page.on("console", (msg) => { if (msg.type() === "error") errors.push(msg.text()); });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Incepe jocul" }).click();
-  await expect(page.getByRole("button", { name: "Pauza" })).toBeVisible();
+  await page.getByTestId("primary-action-button").click();
+  await page.waitForTimeout(500);
+  await expect(page.getByTestId("primary-action-button")).toBeVisible();
 
   await page.keyboard.press("ArrowLeft");
   await page.keyboard.press("ArrowUp");

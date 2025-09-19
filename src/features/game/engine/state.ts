@@ -13,8 +13,6 @@ export interface ActivePiece {
 export interface GameFrameState {
   board: Matrix;
   activePiece: ActivePiece | null;
-  holdPiece: TetrominoType | null;
-  canHold: boolean;
   queue: TetrominoType[];
   clearedLines: number;
   score: number;
@@ -33,8 +31,6 @@ export const initialFrameState = (seed: number, difficulty: Difficulty): GameFra
   return {
     board: Array.from({ length: BOARD_HEIGHT }, () => Array<TetrominoType | null>(BOARD_WIDTH).fill(null)),
     activePiece: null,
-    holdPiece: null,
-    canHold: true,
     queue: [],
     clearedLines: 0,
     score: 0,

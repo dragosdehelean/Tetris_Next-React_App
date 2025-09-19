@@ -10,6 +10,6 @@ test("smoke: homepage renders without console errors", async ({ page }) => {
 
   await page.goto("/");
 
-  await expect(page.getByRole("button", { name: "Incepe jocul" })).toBeVisible();
+  await expect(page.getByTestId("primary-action-button")).toBeVisible();
   expect(errors).toHaveLength(0);
 });
