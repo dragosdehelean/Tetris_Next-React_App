@@ -74,7 +74,7 @@ export function GameDashboard() {
     <Stack gap={3} sx={{ maxWidth: 600, mx: "auto", textAlign: "center", py: { xs: 4, md: 8 } }}>
       <Stack gap={1.5}>
         <Chip label={`Dificultate: ${game.difficulty}`} color="secondary" variant="outlined" sx={{ fontWeight: 600, alignSelf: "center" }} />
-        <Typography component="h1" variant="h3" fontWeight={700}>Tetris Neon Odyssey</Typography>
+        <Typography component="h1" variant="h3" fontWeight={700}>Tetris Odyssey</Typography>
         <Typography color="text.secondary" sx={{ fontSize: { xs: 14, sm: 16 } }}>MVP Tetris cu dificultăți adaptabile și performanță ridicată. Apasă Start și intră în joc.</Typography>
       </Stack>
 

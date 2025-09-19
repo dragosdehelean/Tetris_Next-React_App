@@ -247,6 +247,30 @@ export function GameCanvas() {
       }
     }
 
+    // Line-clear pulse overlay (theme-colored, quick fade)
+    if (typeof performance !== "undefined") {
+      (window as any).__lc = (window as any).__lc || { last: 0 };
+      const last = (window as any).__lc.last as number;
+      if (frame.clearedLines > last) {
+        (window as any).__lc.t = performance.now();
+        (window as any).__lc.last = frame.clearedLines;
+      }
+      const t0 = (window as any).__lc.t as number | undefined;
+      if (t0) {
+        const elapsed = performance.now() - t0;
+        const dur = 360;
+        if (elapsed < dur) {
+          const pal = THEME_PALETTES[themeName as ThemeSkin] ?? THEME_PALETTES.neon;
+          const alpha = Math.max(0, 1 - elapsed / dur) * 0.12;
+          const g = ctx.createLinearGradient(padding, padding, padding + cols * cellSize, padding + rows * cellSize);
+          g.addColorStop(0, rgba(pal.primary, alpha));
+          g.addColorStop(1, rgba(pal.secondary, alpha));
+          ctx.fillStyle = g as any;
+          ctx.fillRect(padding, padding, cols * cellSize, rows * cellSize);
+        }
+      }
+    }
+
     // Themed board border inside canvas (around playfield), rounded + gradient
     const style = boardBorderStyle(themeName as ThemeName);
     const bx = padding + 0.5;
@@ -367,10 +391,12 @@ function drawCellByTheme(
       ctx.drawImage(tile, px, py);
       return;
     }
-    // aurora variants 0..2
-    const variant = seed % 3;
-    const tile = getThemeTile("aurora", s, colorHex, variant);
-    ctx.drawImage(tile, px, py);
+    // aurora motifs by piece type
+    const motifA = auroraMotifForPiece(pieceType);
+    const orientA = seed % 3;
+    const variantA = motifA * 10 + orientA;
+    const tileA = getThemeTile("aurora", s, colorHex, variantA);
+    ctx.drawImage(tileA, px, py);
     return;
   }
 
@@ -736,74 +762,249 @@ function getThemeTile(theme: ThemeSkin, size: number, colorHex: string, variant 
 
     cx.restore();
   } else if (theme === "aurora") {
-    // Aurora variants: ribbon / flare / facet (deterministic by variant)
+    // Aurora motifs per piece: 0 pillars,1 comet,2 campfire,3 lantern,4 ribbons,5 horizon,6 crystals
     cx.save();
     roundedRectPath(cx, 0.5, 0.5, size - 1, size - 1, Math.max(3, Math.floor(size * 0.24)));
     cx.clip();
 
     const pal = THEME_PALETTES.aurora;
 
-    // Bright diagonal base
-    const diag = cx.createLinearGradient(0, 0, size, size);
-    diag.addColorStop(0, rgba(pal.primary, 0.95));
-    diag.addColorStop(1, rgba(pal.secondary, 0.85));
-    cx.fillStyle = diag;
+    // Base night gradient with slight aurora tint
+    const base = cx.createLinearGradient(0, 0, size, size);
+    base.addColorStop(0, rgba("#0c1023", 1));
+    base.addColorStop(1, rgba(pal.surface, 0.9));
+    cx.fillStyle = base;
     cx.fillRect(0, 0, size, size);
 
-    // Variant overlays
-    cx.globalCompositeOperation = "lighter";
-    if (variant === 0) {
-      // Ribbon: two glowing S-curves
-      cx.save();
-      cx.translate(size / 2, size / 2);
-      cx.rotate(-Math.PI / 8);
-      cx.lineWidth = 1.4;
-      const ribbonG = cx.createLinearGradient(-size, 0, size, 0);
-      ribbonG.addColorStop(0, rgba("#ffffff", 0.4));
-      ribbonG.addColorStop(1, rgba(pal.secondary, 0.6));
-      cx.strokeStyle = ribbonG;
-      cx.beginPath();
-      cx.moveTo(-size * 0.6, -size * 0.2);
-      cx.quadraticCurveTo(0, -size * 0.5, size * 0.6, size * 0.2);
-      cx.stroke();
-      cx.beginPath();
-      cx.moveTo(-size * 0.6, size * 0.2);
-      cx.quadraticCurveTo(0, size * 0.5, size * 0.6, -size * 0.2);
-      cx.stroke();
-      cx.restore();
-    } else if (variant === 1) {
-      // Flare: radial starburst center
-      const star = cx.createRadialGradient(size * 0.5, size * 0.45, 0, size * 0.5, size * 0.45, size * 0.9);
-      star.addColorStop(0, rgba("#ffffff", 0.45));
-      star.addColorStop(1, "rgba(0,0,0,0)");
-      cx.fillStyle = star;
-      cx.fillRect(0, 0, size, size);
-    } else {
-      // Facet: criss-cross bright facets
-      const f1 = cx.createLinearGradient(0, size, size, 0);
-      f1.addColorStop(0.3, rgba("#ffffff", 0));
-      f1.addColorStop(0.5, rgba(pal.primary, 0.6));
-      f1.addColorStop(0.7, rgba("#ffffff", 0));
-      cx.fillStyle = f1;
-      cx.fillRect(0, 0, size, size);
+    const motif = Math.floor(variant / 10) % 10;
+    const orient = variant % 10;
 
-      const f2 = cx.createLinearGradient(size, 0, 0, size);
-      f2.addColorStop(0.3, rgba("#ffffff", 0));
-      f2.addColorStop(0.5, rgba(pal.secondary, 0.55));
-      f2.addColorStop(0.7, rgba("#ffffff", 0));
-      cx.fillStyle = f2;
-      cx.fillRect(0, 0, size, size);
+    cx.globalCompositeOperation = "lighter";
+    switch (motif) {
+      case 0: {
+        // Aurora rune (diamond + chevrons) – clearer than vertical bars
+        const cxm = size * 0.5, cym = size * 0.52;
+        const dx = size * 0.28, dy = size * 0.32;
+        const grad = cx.createLinearGradient(0, 0, size, size);
+        grad.addColorStop(0, rgba(pal.primary, 0.9));
+        grad.addColorStop(1, rgba(pal.secondary, 0.85));
+        cx.fillStyle = grad;
+
+        // Outer diamond
+        cx.beginPath();
+        cx.moveTo(cxm, cym - dy);
+        cx.lineTo(cxm + dx, cym);
+        cx.lineTo(cxm, cym + dy);
+        cx.lineTo(cxm - dx, cym);
+        cx.closePath();
+        cx.fill();
+        cx.strokeStyle = rgba("#ffffff", 0.25);
+        cx.lineWidth = 1;
+        cx.stroke();
+
+        // Inner warm core
+        const core = cx.createRadialGradient(cxm, cym, 0, cxm, cym, size * 0.22);
+        core.addColorStop(0, rgba("#fff2c2", 0.95));
+        core.addColorStop(1, "rgba(0,0,0,0)");
+        cx.fillStyle = core;
+        cx.beginPath(); cx.arc(cxm, cym, size * 0.2, 0, Math.PI * 2); cx.fill();
+
+        // Chevrons (aurora streaks)
+        cx.strokeStyle = rgba(pal.primary, 0.8);
+        cx.lineWidth = 1.2;
+        const ang = (orient - 1) * (Math.PI / 12);
+        cx.save();
+        cx.translate(cxm, cym);
+        cx.rotate(ang);
+        cx.beginPath();
+        cx.moveTo(-size * 0.35, -size * 0.08);
+        cx.lineTo(size * 0.35, -size * 0.08);
+        cx.stroke();
+        cx.beginPath();
+        cx.moveTo(-size * 0.28, size * 0.08);
+        cx.lineTo(size * 0.28, size * 0.08);
+        cx.stroke();
+        cx.restore();
+        break;
+      }
+      case 1: {
+        // Comet swirl (tail + bright head)
+        const headX = orient === 0 ? size * 0.25 : orient === 1 ? size * 0.75 : size * 0.5;
+        const headY = size * 0.3;
+        const r = size * 0.22;
+        const head = cx.createRadialGradient(headX, headY, 0, headX, headY, r);
+        head.addColorStop(0, rgba("#ffffff", 0.9));
+        head.addColorStop(1, rgba(pal.secondary, 0.2));
+        cx.fillStyle = head;
+        cx.beginPath(); cx.arc(headX, headY, r, 0, Math.PI * 2); cx.fill();
+        cx.strokeStyle = rgba(pal.primary, 0.65);
+        cx.lineWidth = 1.3;
+        cx.beginPath();
+        cx.moveTo(headX - r * 1.2, headY + r * 0.2);
+        cx.quadraticCurveTo(size * 0.2, size * 0.8, size * 0.1, size * 0.9);
+        cx.stroke();
+        break;
+      }
+      case 2: {
+        // Campfire (revamped): crossed logs + vivid flame + asymmetric embers
+        cx.globalCompositeOperation = "source-over";
+        // Crossed logs
+        const len = Math.floor(size * 0.9);
+        const th = Math.max(3, Math.floor(size * 0.12));
+        const logGrad = cx.createLinearGradient(0, 0, len, 0);
+        logGrad.addColorStop(0, rgba("#5b3a25", 0.98));
+        logGrad.addColorStop(0.5, rgba("#7a4c2c", 0.98));
+        logGrad.addColorStop(1, rgba("#4a2f1f", 0.98));
+        cx.save();
+        cx.translate(size * 0.5, size * 0.84);
+        cx.rotate(Math.PI / 10);
+        cx.fillStyle = logGrad;
+        cx.fillRect(-len / 2, -th / 2, len, th);
+        cx.restore();
+        cx.save();
+        cx.translate(size * 0.5, size * 0.86);
+        cx.rotate(-Math.PI / 10);
+        cx.fillStyle = logGrad;
+        cx.fillRect(-len / 2, -th / 2, len, th);
+        cx.restore();
+
+        // Flame body
+        cx.globalCompositeOperation = "lighter";
+        const apexY = size * 0.38;
+        const flameLG = cx.createLinearGradient(0, size * 0.95, 0, apexY);
+        flameLG.addColorStop(0, rgba("#ff6a00", 0.95));
+        flameLG.addColorStop(0.5, rgba("#ffb347", 0.95));
+        flameLG.addColorStop(1, rgba("#ffd166", 0.95));
+        cx.fillStyle = flameLG;
+        cx.beginPath();
+        cx.moveTo(size * 0.22, size * 0.92);
+        cx.quadraticCurveTo(size * 0.38, size * 0.70, size * 0.50, apexY);
+        cx.quadraticCurveTo(size * 0.62, size * 0.70, size * 0.78, size * 0.92);
+        cx.closePath();
+        cx.fill();
+        // Inner hot core
+        const core = cx.createRadialGradient(size * 0.5, size * 0.72, 0, size * 0.5, size * 0.72, size * 0.22);
+        core.addColorStop(0, rgba("#ffffff", 0.95));
+        core.addColorStop(1, rgba("#ffe59a", 0.0));
+        cx.fillStyle = core;
+        cx.beginPath(); cx.arc(size * 0.5, size * 0.72, size * 0.24, 0, Math.PI * 2); cx.fill();
+
+        // Asymmetric embers
+        const ember = (sx: number, sy: number, rr: number) => {
+          const g = cx.createRadialGradient(sx, sy, 0, sx, sy, rr);
+          g.addColorStop(0, rgba("#fff2cc", 0.95));
+          g.addColorStop(1, "rgba(0,0,0,0)");
+          cx.fillStyle = g;
+          cx.beginPath(); cx.arc(sx, sy, rr, 0, Math.PI * 2); cx.fill();
+        };
+        ember(size * 0.33, size * 0.46, size * 0.06);
+        ember(size * 0.58, size * 0.36, size * 0.05);
+        ember(size * 0.46, size * 0.28, size * 0.04);
+        break;
+      }
+      case 3: {
+        // Lantern orb (warm center with ring)
+        const cxm = size * 0.5, cym = size * 0.5;
+        const orb = cx.createRadialGradient(cxm, cym, 0, cxm, cym, size * 0.45);
+        orb.addColorStop(0, rgba("#fff2c2", 1));
+        orb.addColorStop(0.5, rgba("#ffd166", 0.9));
+        orb.addColorStop(1, rgba(pal.secondary, 0.25));
+        cx.fillStyle = orb;
+        cx.beginPath(); cx.arc(cxm, cym, size * 0.4, 0, Math.PI * 2); cx.fill();
+        // Ring
+        cx.strokeStyle = rgba(pal.primary, 0.6);
+        cx.lineWidth = 1;
+        cx.beginPath(); cx.arc(cxm, cym, size * 0.42, 0, Math.PI * 2); cx.stroke();
+        break;
+      }
+      case 4: {
+        // Aurora wave (single luminous S-curve + warm accent)
+        cx.save();
+        cx.translate(size / 2, size / 2);
+        cx.rotate((orient - 1) * (Math.PI / 14));
+
+        // Main cool wave
+        const lw = Math.max(3, Math.floor(size * 0.22));
+        const grad = cx.createLinearGradient(-size, 0, size, 0);
+        grad.addColorStop(0.0, rgba(pal.primary, 0.9));
+        grad.addColorStop(0.5, rgba("#c9f7ff", 0.9));
+        grad.addColorStop(1.0, rgba(pal.secondary, 0.85));
+        cx.strokeStyle = grad;
+        cx.lineCap = "round";
+        cx.lineJoin = "round";
+        cx.lineWidth = lw;
+        cx.beginPath();
+        cx.moveTo(-size * 0.55, -size * 0.15);
+        cx.quadraticCurveTo(0, -size * 0.45, size * 0.55, size * 0.12);
+        cx.stroke();
+
+        // Warm accent wave (thinner, offset)
+        cx.strokeStyle = rgba("#ffd166", 0.85);
+        cx.lineWidth = Math.max(2, Math.floor(size * 0.10));
+        cx.beginPath();
+        cx.moveTo(-size * 0.48, size * 0.10);
+        cx.quadraticCurveTo(0, -size * 0.18, size * 0.45, size * 0.28);
+        cx.stroke();
+
+        // Sparkles at ends
+        const sp = (sx: number, sy: number, rr: number) => {
+          const g = cx.createRadialGradient(sx, sy, 0, sx, sy, rr);
+          g.addColorStop(0, rgba("#ffffff", 0.9));
+          g.addColorStop(1, "rgba(0,0,0,0)");
+          cx.fillStyle = g;
+          cx.beginPath(); cx.arc(sx, sy, rr, 0, Math.PI * 2); cx.fill();
+        };
+        sp(-size * 0.5, -size * 0.12, size * 0.08);
+        sp(size * 0.5, size * 0.12, size * 0.07);
+        cx.restore();
+        break;
+      }
+      case 5: {
+        // Horizon + moon
+        const haze = cx.createLinearGradient(0, size * 0.7, 0, size * 0.3);
+        haze.addColorStop(0, rgba(pal.primary, 0.1));
+        haze.addColorStop(1, rgba(pal.secondary, 0.25));
+        cx.fillStyle = haze;
+        cx.fillRect(0, size * 0.3, size, size * 0.4);
+        cx.fillStyle = rgba("#ffffff", 0.95);
+        cx.fillRect(0, size * 0.7, size, 1);
+        // Moon
+        const mx = size * (0.3 + orient * 0.2), my = size * 0.35;
+        const mr = size * 0.12;
+        cx.fillStyle = rgba("#f3fbff", 0.95);
+        cx.beginPath(); cx.arc(mx, my, mr, 0, Math.PI * 2); cx.fill();
+        cx.globalCompositeOperation = "destination-out";
+        cx.beginPath(); cx.arc(mx + mr * 0.35, my - mr * 0.1, mr, 0, Math.PI * 2); cx.fill();
+        cx.globalCompositeOperation = "lighter";
+        break;
+      }
+      case 6: {
+        // Crystal facets (warm/cool criss-cross)
+        const f1 = cx.createLinearGradient(0, size, size, 0);
+        f1.addColorStop(0.3, rgba("#ffffff", 0));
+        f1.addColorStop(0.5, rgba(pal.primary, 0.8));
+        f1.addColorStop(0.7, rgba("#ffd166", 0.6));
+        cx.fillStyle = f1;
+        cx.fillRect(0, 0, size, size);
+        const f2 = cx.createLinearGradient(size, 0, 0, size);
+        f2.addColorStop(0.3, rgba("#ffffff", 0));
+        f2.addColorStop(0.5, rgba(pal.secondary, 0.8));
+        f2.addColorStop(0.7, rgba("#ff9f1a", 0.55));
+        cx.fillStyle = f2;
+        cx.fillRect(0, 0, size, size);
+        break;
+      }
     }
 
-    // Stronger piece tint to keep identity
-    cx.fillStyle = rgba(colorHex, 0.32);
+    // Keep piece identity
+    cx.fillStyle = rgba(colorHex, 0.25);
     cx.fillRect(0, 0, size, size);
 
     // Inner crisp rim with gradient
     cx.globalCompositeOperation = "source-over";
     const rim = cx.createLinearGradient(0, 0, size, size);
-    rim.addColorStop(0, rgba(pal.primary, 1));
-    rim.addColorStop(1, rgba(pal.secondary, 1));
+    rim.addColorStop(0, rgba(pal.primary, 0.9));
+    rim.addColorStop(1, rgba(pal.secondary, 0.9));
     cx.strokeStyle = rim;
     cx.lineWidth = 1;
     cx.strokeRect(0.5, 0.5, size - 1, size - 1);
@@ -866,5 +1067,26 @@ function cityscapeMotifForPiece(type?: TetrominoType): number {
       return 0; // neon billboard/sign
     default:
       return 0;
+  }
+}
+
+function auroraMotifForPiece(type?: TetrominoType): number {
+  switch (type) {
+    case "I":
+      return 0; // pillars
+    case "J":
+      return 1; // comet
+    case "L":
+      return 2; // campfire
+    case "O":
+      return 3; // lantern orb
+    case "S":
+      return 4; // ribbons cross
+    case "T":
+      return 5; // horizon + moon
+    case "Z":
+      return 6; // crystal facets
+    default:
+      return 4;
   }
 }
