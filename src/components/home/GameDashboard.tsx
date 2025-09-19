@@ -71,38 +71,39 @@ export function GameDashboard() {
   }, [addScore, dispatch, game.difficulty, game.frame]);
 
   return (
-    <Stack gap={4} sx={{ maxWidth: 720, mx: "auto", textAlign: "center", py: { xs: 8, md: 12 } }}>
+    <Stack gap={3} sx={{ maxWidth: 720, mx: "auto", textAlign: "center", py: { xs: 6, md: 10 } }}>
       <Stack gap={2}>
         <Chip label={`Dificultate: ${game.difficulty}`} color="secondary" variant="outlined" sx={{ fontWeight: 600, alignSelf: "center" }} />
         <Typography component="h1" variant="h2" fontWeight={700}>Tetris Neon Odyssey</Typography>
-        <Typography color="text.secondary">
-          MVP Tetris cu dificultati adaptabile si performanta ridicata. Apasa Start si intra in joc.
-        </Typography>
+        <Typography color="text.secondary">MVP Tetris cu dificultăți adaptabile și performanță ridicată. Apasă Start și intră în joc.</Typography>
       </Stack>
 
-      <Stack direction={{ xs: "column", sm: "row" }} gap={2} justifyContent="center" alignItems="center">
+      {/* Rândul 1 (HUD) compact, apropiat de joc */}
+      <Stack direction={{ xs: "column", sm: "row" }} gap={1.5} justifyContent="center" alignItems="center" sx={{ mt: 0, mb: 1 }}>
         <StatCard label="Scor" value={score.toLocaleString()} />
         <StatCard label="Nivel" value={level.toString()} />
         <StatCard label="Linii" value={linesCleared.toString()} />
       </Stack>
 
-      {/* Canvas imediat sub HUD */}
-      <Box sx={{ borderRadius: 4, border: "1px solid", borderColor: "var(--color-panel-border)", background: "var(--color-surface-overlay, rgba(19,7,46,0.65))", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", p: 2 }}>
+      {/* Canvas imediat sub HUD, cu padding redus pentru compactare */}
+      <Box sx={{ borderRadius: 4, border: "1px solid", borderColor: "var(--color-panel-border)", background: "var(--color-surface-overlay, rgba(19,7,46,0.65))", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", p: 1.5, mt: 0, mb: 1 }}>
         <GameCanvas />
       </Box>
 
-      {/* Rând de controale dedesubtul jocului */}
-      <Stack direction={{ xs: "column", sm: "row" }} gap={2} justifyContent="center" alignItems="center">
-        <Button variant="contained" size="large" color="primary" onClick={primaryCta.onClick} sx={{ alignSelf: "center", px: 6 }}>
+      {/* Rând de controale dedesubtul jocului, compact și fără text pe două rânduri */}
+      <Stack direction={{ xs: "column", sm: "row" }} gap={1.5} justifyContent="center" alignItems="center" sx={{ mt: 0 }}>
+        <Button variant="contained" size="large" color="primary" onClick={primaryCta.onClick} sx={{ alignSelf: "center", px: 5, whiteSpace: "nowrap" }}>
           {primaryCta.label}
         </Button>
-        <Button variant="outlined" color="secondary" onClick={handleRestart} data-testid="restart-button" sx={{ px: 4 }}>
-          Restart (salvează scor)
+        <Button variant="outlined" color="secondary" onClick={handleRestart} data-testid="restart-button" sx={{ px: 4, whiteSpace: "nowrap" }}>
+          Restart (salvare)
         </Button>
-        <Button variant="outlined" color="secondary" onClick={handleThemeSwitch} data-testid="theme-switch" sx={{ px: 4 }}>
-          Schimba tema ({themeMeta.label})
+        <Button variant="outlined" color="secondary" onClick={handleThemeSwitch} data-testid="theme-switch" sx={{ px: 4, whiteSpace: "nowrap" }}>
+          Schimba tema
         </Button>
-        <InstructionsButton />
+        <Box sx={{ display: "flex" }}>
+          <InstructionsButton />
+        </Box>
       </Stack>
 
       <Box sx={{ display: { xs: "block", md: "none" } }}>
@@ -122,7 +123,19 @@ interface StatCardProps { label: string; value: string }
 
 function StatCard({ label, value }: StatCardProps) {
   return (
-    <Stack gap={1} sx={{ minWidth: 140, px: 3, py: 2, borderRadius: 3, border: "1px solid", borderColor: "var(--color-panel-border)", background: "var(--color-card-gradient)", boxShadow: `0 0 24px var(--color-card-shadow)` }}>
+    <Stack
+      gap={0.5}
+      sx={{
+        minWidth: 160,
+        px: 3,
+        py: 2,
+        borderRadius: 6, // colțuri mai rotunjite (efect de "chip" mare)
+        border: "1px solid",
+        borderColor: "var(--color-panel-border)",
+        background: "var(--color-card-gradient)",
+        boxShadow: `0 0 28px var(--color-card-shadow)`,
+      }}
+    >
       <Typography variant="overline" color="text.secondary" letterSpacing={1}>{label}</Typography>
       <Typography variant="h5" fontWeight={700}>{value}</Typography>
     </Stack>

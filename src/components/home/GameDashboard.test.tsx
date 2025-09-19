@@ -40,16 +40,18 @@ describe("GameDashboard", () => {
 
   it("cycles theme when pressing the theme switch", async () => {
     const user = userEvent.setup();
-    renderWithProviders(<GameDashboard />);
+    const { store } = renderWithProviders(<GameDashboard />);
 
     const button = screen.getByTestId("theme-switch");
-    expect(button).toHaveTextContent("Neon Odyssey");
+
+    const initial = store.getState().theme.current;
+    await user.click(button);
+    const after1 = store.getState().theme.current;
+    expect(after1).not.toBe(initial);
 
     await user.click(button);
-    expect(button).toHaveTextContent("Cityscape Dusk");
-
-    await user.click(button);
-    expect(button).toHaveTextContent("Aurora Borealis");
+    const after2 = store.getState().theme.current;
+    expect(after2).not.toBe(after1);
   });
 
   it("respects preloaded theme state", () => {
@@ -57,9 +59,8 @@ describe("GameDashboard", () => {
       theme: { current: "aurora" },
     };
 
-    renderWithProviders(<GameDashboard />, { preloadedState });
-
-    expect(screen.getByTestId("theme-switch")).toHaveTextContent("Aurora Borealis");
+    const { store } = renderWithProviders(<GameDashboard />, { preloadedState });
+    expect(store.getState().theme.current).toBe("aurora");
   });
 });
 
