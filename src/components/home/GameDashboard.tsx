@@ -71,11 +71,11 @@ export function GameDashboard() {
   }, [addScore, dispatch, game.difficulty, game.frame]);
 
   return (
-    <Stack gap={3} sx={{ maxWidth: 600, mx: "auto", textAlign: "center", py: { xs: 4, md: 8 } }}>
-      <Stack gap={1.5}>
-        <Chip label={`Dificultate: ${game.difficulty}`} color="secondary" variant="outlined" sx={{ fontWeight: 600, alignSelf: "center" }} />
-        <Typography component="h1" variant="h3" fontWeight={700}>Tetris Odyssey</Typography>
-        <Typography color="text.secondary" sx={{ fontSize: { xs: 14, sm: 16 } }}>MVP Tetris cu dificultăți adaptabile și performanță ridicată. Apasă Start și intră în joc.</Typography>
+    <Stack gap={2.5} sx={{ maxWidth: 600, mx: "auto", textAlign: "center", py: { xs: 2, md: 8 }, px: { xs: 1, sm: 0 } }}>
+      <Stack gap={1}>
+        <Chip label={`Dificultate: ${game.difficulty}`} color="secondary" variant="outlined" sx={{ fontWeight: 600, alignSelf: "center", fontSize: { xs: '0.8rem', sm: '0.875rem' } }} />
+        <Typography component="h1" variant="h3" fontWeight={700} sx={{ fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' } }}>Tetris Odyssey</Typography>
+        <Typography color="text.secondary" sx={{ fontSize: { xs: 13, sm: 16 }, px: { xs: 1, sm: 0 } }}>MVP Tetris cu dificultăți adaptabile și performanță ridicată. Apasă Start și intră în joc.</Typography>
       </Stack>
 
       {/* Panou joc cu HUD sub canvas */}
@@ -86,7 +86,7 @@ export function GameDashboard() {
         background: "var(--color-surface-overlay, rgba(19,7,46,0.65))",
         backdropFilter: "blur(12px)",
         boxShadow: "0 0 22px var(--board-border-glow, transparent)",
-        p: { xs: 1.5, sm: 2 }, mt: 0, mb: 1,
+        p: { xs: 1, sm: 2 }, mt: 0, mb: 1,
       }}>
         {/* Canvas centrat */}
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -100,10 +100,10 @@ export function GameDashboard() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: 1,
+            gap: { xs: 0.8, sm: 1 },
             flexWrap: "wrap",
-            px: 1.2,
-            py: 0.6,
+            px: { xs: 1, sm: 1.2 },
+            py: { xs: 0.4, sm: 0.6 },
             borderRadius: 999,
             border: "1px solid var(--board-border-color)",
             boxShadow: "0 0 12px var(--board-border-glow)",
@@ -117,14 +117,14 @@ export function GameDashboard() {
       </Box>
 
       {/* Rând de controale dedesubtul jocului, compact și fără text pe două rânduri */}
-      <Stack direction={{ xs: "column", sm: "row" }} gap={1.2} justifyContent="center" alignItems="center" sx={{ mt: 0 }}>
-        <Button variant="contained" size="large" color="primary" onClick={primaryCta.onClick} sx={{ alignSelf: "center", px: 5, whiteSpace: "nowrap" }}>
+      <Stack direction={{ xs: "column", sm: "row" }} gap={{ xs: 1, sm: 1.2 }} justifyContent="center" alignItems="center" sx={{ mt: 0, px: { xs: 1, sm: 0 } }}>
+        <Button variant="contained" size="large" color="primary" onClick={primaryCta.onClick} sx={{ alignSelf: "center", px: 5, whiteSpace: "nowrap", minHeight: 48 }}>
           {primaryCta.label}
         </Button>
-        <Button variant="outlined" color="secondary" onClick={handleRestart} data-testid="restart-button" sx={{ px: 4, whiteSpace: "nowrap" }}>
+        <Button variant="outlined" color="secondary" onClick={handleRestart} data-testid="restart-button" sx={{ px: 4, whiteSpace: "nowrap", minHeight: 44 }}>
           Restart (salvare)
         </Button>
-        <Button variant="outlined" color="secondary" onClick={handleThemeSwitch} data-testid="theme-switch" sx={{ px: 4, whiteSpace: "nowrap" }}>
+        <Button variant="outlined" color="secondary" onClick={handleThemeSwitch} data-testid="theme-switch" sx={{ px: 4, whiteSpace: "nowrap", minHeight: 44 }}>
           Schimba tema
         </Button>
         <Box sx={{ display: "flex" }}>
@@ -147,11 +147,11 @@ export function GameDashboard() {
 
 function HudStat({ label, value }: { label: string; value: string }) {
   return (
-    <Stack direction="row" alignItems="baseline" gap={0.5} sx={{ px: 0.5 }}>
-      <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.6 }}>
+    <Stack direction="row" alignItems="baseline" gap={0.4} sx={{ px: { xs: 0.3, sm: 0.5 } }}>
+      <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.6, fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
         {label}:
       </Typography>
-      <Typography variant="subtitle2" fontWeight={700}>
+      <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
         {value}
       </Typography>
     </Stack>

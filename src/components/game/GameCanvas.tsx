@@ -123,8 +123,13 @@ export function GameCanvas() {
 
     let ro: ResizeObserver | undefined;
     const handleSize = (containerWidth: number) => {
-      const maxCell = Math.min(28, Math.floor((containerWidth - padding * 2) / cols));
-      const next = Math.max(22, maxCell);
+      // For mobile devices, use more generous cell sizes
+      const isMobile = containerWidth < 600;
+      const baseMaxCell = isMobile ? 32 : 28;
+      const baseMinCell = isMobile ? 26 : 22;
+      
+      const maxCell = Math.min(baseMaxCell, Math.floor((containerWidth - padding * 2) / cols));
+      const next = Math.max(baseMinCell, maxCell);
       if (Number.isFinite(next) && next !== cellSize) setCellSize(next);
     };
 
