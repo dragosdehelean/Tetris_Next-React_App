@@ -71,27 +71,59 @@ export function GameDashboard() {
   }, [addScore, dispatch, game.difficulty, game.frame]);
 
   return (
-    <Stack gap={3} sx={{ maxWidth: 720, mx: "auto", textAlign: "center", py: { xs: 6, md: 10 } }}>
-      <Stack gap={2}>
+    <Stack gap={3} sx={{ maxWidth: 600, mx: "auto", textAlign: "center", py: { xs: 4, md: 8 } }}>
+      <Stack gap={1.5}>
         <Chip label={`Dificultate: ${game.difficulty}`} color="secondary" variant="outlined" sx={{ fontWeight: 600, alignSelf: "center" }} />
-        <Typography component="h1" variant="h2" fontWeight={700}>Tetris Neon Odyssey</Typography>
-        <Typography color="text.secondary">MVP Tetris cu dificultăți adaptabile și performanță ridicată. Apasă Start și intră în joc.</Typography>
+        <Typography component="h1" variant="h3" fontWeight={700}>Tetris Neon Odyssey</Typography>
+        <Typography color="text.secondary" sx={{ fontSize: { xs: 14, sm: 16 } }}>MVP Tetris cu dificultăți adaptabile și performanță ridicată. Apasă Start și intră în joc.</Typography>
       </Stack>
 
-      {/* Rândul 1 (HUD) compact, apropiat de joc */}
-      <Stack direction={{ xs: "column", sm: "row" }} gap={1.5} justifyContent="center" alignItems="center" sx={{ mt: 0, mb: 1 }}>
-        <StatCard label="Scor" value={score.toLocaleString()} />
-        <StatCard label="Nivel" value={level.toString()} />
-        <StatCard label="Linii" value={linesCleared.toString()} />
-      </Stack>
+      {/* Panou joc cu HUD pill centrat deasupra canvasului */}
+      <Box sx={{
+        position: "relative",
+        borderRadius: 4,
+        border: "1px solid",
+        borderColor: "var(--board-border-color, var(--color-panel-border))",
+        background: "var(--color-surface-overlay, rgba(19,7,46,0.65))",
+        backdropFilter: "blur(12px)",
+        boxShadow: "0 0 22px var(--board-border-glow, transparent)",
+        p: { xs: 1.5, sm: 2 }, pt: { xs: 5, sm: 5 }, mt: 0, mb: 1,
+      }}>
+        {/* HUD pill overlay */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: 8,
+            left: "50%",
+            transform: "translateX(-50%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1,
+            flexWrap: "wrap",
+            px: 1,
+            py: 0.5,
+            borderRadius: 999,
+            border: "1px solid var(--board-border-color)",
+            boxShadow: "0 0 12px var(--board-border-glow)",
+            background: "rgba(0,0,0,0.18)",
+            zIndex: 2,
+            maxWidth: "calc(100% - 16px)",
+          }}
+        >
+          <HudStat label="Scor" value={score.toLocaleString()} />
+          <HudStat label="Nivel" value={level.toString()} />
+          <HudStat label="Linii" value={linesCleared.toString()} />
+        </Box>
 
-      {/* Canvas imediat sub HUD, cu padding redus pentru compactare */}
-      <Box sx={{ borderRadius: 4, border: "1px solid", borderColor: "var(--color-panel-border)", background: "var(--color-surface-overlay, rgba(19,7,46,0.65))", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(12px)", p: 1.5, mt: 0, mb: 1 }}>
-        <GameCanvas />
+        {/* Canvas centrat */}
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <GameCanvas />
+        </Box>
       </Box>
 
       {/* Rând de controale dedesubtul jocului, compact și fără text pe două rânduri */}
-      <Stack direction={{ xs: "column", sm: "row" }} gap={1.5} justifyContent="center" alignItems="center" sx={{ mt: 0 }}>
+      <Stack direction={{ xs: "column", sm: "row" }} gap={1.2} justifyContent="center" alignItems="center" sx={{ mt: 0 }}>
         <Button variant="contained" size="large" color="primary" onClick={primaryCta.onClick} sx={{ alignSelf: "center", px: 5, whiteSpace: "nowrap" }}>
           {primaryCta.label}
         </Button>
@@ -119,25 +151,38 @@ export function GameDashboard() {
   );
 }
 
-interface StatCardProps { label: string; value: string }
+interface StatCardProps { label: string; value: string; compact?: boolean }
 
-function StatCard({ label, value }: StatCardProps) {
+function StatCard({ label, value, compact = false }: StatCardProps) {
   return (
     <Stack
       gap={0.5}
       sx={{
-        minWidth: 160,
-        px: 3,
-        py: 2,
+        minWidth: compact ? 72 : 160,
+        px: compact ? 1 : 3,
+        py: compact ? 0.6 : 2,
         borderRadius: 6, // colțuri mai rotunjite (efect de "chip" mare)
         border: "1px solid",
         borderColor: "var(--color-panel-border)",
         background: "var(--color-card-gradient)",
-        boxShadow: `0 0 28px var(--color-card-shadow)`,
+        boxShadow: `0 0 ${compact ? 12 : 28}px var(--color-card-shadow)`,
       }}
     >
-      <Typography variant="overline" color="text.secondary" letterSpacing={1}>{label}</Typography>
-      <Typography variant="h5" fontWeight={700}>{value}</Typography>
+      <Typography variant="caption" color="text.secondary" letterSpacing={0.8}>{label}</Typography>
+      <Typography variant={compact ? "subtitle2" : "h5"} fontWeight={700}>{value}</Typography>
+    </Stack>
+  );
+}
+
+function HudStat({ label, value }: { label: string; value: string }) {
+  return (
+    <Stack direction="row" alignItems="baseline" gap={0.5} sx={{ px: 0.5 }}>
+      <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.6 }}>
+        {label}:
+      </Typography>
+      <Typography variant="subtitle2" fontWeight={700}>
+        {value}
+      </Typography>
     </Stack>
   );
 }

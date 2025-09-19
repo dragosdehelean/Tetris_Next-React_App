@@ -11,6 +11,8 @@
   --color-panel-border: rgba(255, 110, 199, 0.35);
   --color-card-shadow: rgba(255, 110, 199, 0.25);
   --color-surface-overlay: rgba(19, 7, 46, 0.65);
+  --board-border-color: rgba(255, 110, 199, 0.35);
+  --board-border-glow: rgba(255, 110, 199, 0.25);
 }
 
 [data-theme="neon"] {
@@ -25,6 +27,8 @@
   --color-panel-border: rgba(255, 110, 199, 0.35);
   --color-card-shadow: rgba(255, 110, 199, 0.25);
   --color-surface-overlay: rgba(19, 7, 46, 0.65);
+  --board-border-color: rgba(255, 110, 199, 0.42);
+  --board-border-glow: rgba(255, 110, 199, 0.32);
 }
 
 [data-theme="cityscape"] {
@@ -39,6 +43,8 @@
   --color-panel-border: rgba(0, 194, 255, 0.32);
   --color-card-shadow: rgba(0, 194, 255, 0.25);
   --color-surface-overlay: rgba(6, 29, 50, 0.6);
+  --board-border-color: rgba(0, 194, 255, 0.38);
+  --board-border-glow: rgba(0, 194, 255, 0.28);
 }
 
 [data-theme="aurora"] {
@@ -53,6 +59,8 @@
   --color-panel-border: rgba(96, 211, 148, 0.28);
   --color-card-shadow: rgba(96, 211, 148, 0.23);
   --color-surface-overlay: rgba(20, 26, 51, 0.62);
+  --board-border-color: rgba(96, 211, 148, 0.34);
+  --board-border-glow: rgba(96, 211, 148, 0.24);
 }
 
 *,

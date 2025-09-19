@@ -14,7 +14,7 @@ export default function HomePage() {
             "radial-gradient(circle at top, rgba(255,110,199,0.15), transparent 60%), linear-gradient(180deg, #070017 0%, #03010b 80%)",
         }}
       >
-        <Container maxWidth="lg">
+        <Container maxWidth="sm">
           <GameDashboard />
           <GameAudio />
           <GameLifecycle />
