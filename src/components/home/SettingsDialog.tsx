@@ -5,6 +5,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
+  Button,
   IconButton,
   Typography,
   Box,
@@ -99,9 +101,7 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
         alignItems: 'center',
         pb: 1 
       }}>
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          ⚙️ Setări
-        </Typography>
+        ⚙️ Setări
         <IconButton 
           onClick={onClose}
           sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
@@ -113,6 +113,33 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       <DialogContent sx={{ pt: 2 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           
+          {/* Setări temă - PRIMUL */}
+          <Box>
+            <Typography variant="h6" sx={{ mb: 2, color: 'primary.light' }}>
+              🎨 Teme
+            </Typography>
+            
+            <FormControl component="fieldset">
+              <RadioGroup
+                value={themeName}
+                onChange={handleThemeChange}
+                sx={{ '& .MuiRadio-root': { color: 'white' } }}
+              >
+                {THEME_OPTIONS.map((theme) => (
+                  <FormControlLabel
+                    key={theme.id}
+                    value={theme.id}
+                    control={<Radio />}
+                    label={theme.label}
+                    sx={{ color: 'white' }}
+                  />
+                ))}
+              </RadioGroup>
+            </FormControl>
+          </Box>
+
+          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+
           {/* Setări de control */}
           <Box>
             <Typography variant="h6" sx={{ mb: 2, color: 'primary.light' }}>
@@ -291,35 +318,14 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               sx={{ color: 'white', mb: 2 }}
             />
           </Box>
-
-          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-
-          {/* Setări temă */}
-          <Box>
-            <Typography variant="h6" sx={{ mb: 2, color: 'primary.light' }}>
-              🎨 Teme
-            </Typography>
-            
-            <FormControl component="fieldset">
-              <RadioGroup
-                value={themeName}
-                onChange={handleThemeChange}
-                sx={{ '& .MuiRadio-root': { color: 'white' } }}
-              >
-                {THEME_OPTIONS.map((theme) => (
-                  <FormControlLabel
-                    key={theme.id}
-                    value={theme.id}
-                    control={<Radio />}
-                    label={theme.label}
-                    sx={{ color: 'white' }}
-                  />
-                ))}
-              </RadioGroup>
-            </FormControl>
-          </Box>
         </Box>
       </DialogContent>
+
+      <DialogActions>
+        <Button onClick={onClose} autoFocus data-testid="settings-close">
+          Închide
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 }
