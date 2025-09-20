@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { Box, Button, Chip, Stack, Typography } from "@mui/material";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/features/store/hooks";
 import {
   startGame,
@@ -12,14 +12,14 @@ import {
   selectLevel,
   selectLinesCleared,
 } from "@/features/game/gameSlice";
-import { selectThemeName, setTheme } from "@/features/theme/themeSlice";
-import { THEME_NAMES, THEME_OPTIONS } from "@/features/theme/themeOptions";
+import { selectThemeName } from "@/features/theme/themeSlice";
+import { THEME_OPTIONS } from "@/features/theme/themeOptions";
 import { GameCanvas } from "@/components/game/GameCanvas";
-import { SettingsPanel } from "@/components/game/SettingsPanel";
 import { LeaderboardPanel } from "@/components/game/LeaderboardPanel";
 import { TestControls } from "@/components/test/TestControls";
 import { InstructionsButton } from "@/components/game/InstructionsDialog";
 import { ControlsOverlay } from "@/components/game/ControlsOverlay";
+import SettingsDialog from "@/components/home/SettingsDialog";
 import { useAddScoreMutation } from "@/features/scores/localScoresApi";
 
 export function GameDashboard() {
@@ -31,6 +31,7 @@ export function GameDashboard() {
   const themeName = useAppSelector(selectThemeName);
   const themeMeta = THEME_OPTIONS.find((theme) => theme.id === themeName) ?? THEME_OPTIONS[0];
   const [addScore] = useAddScoreMutation();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const primaryCta = useMemo(() => {
     switch (game.status) {
@@ -46,10 +47,8 @@ export function GameDashboard() {
   }, [dispatch, game.difficulty, game.status]);
 
   const handleThemeSwitch = useCallback(() => {
-    const currentIndex = THEME_NAMES.indexOf(themeName);
-    const nextTheme = THEME_NAMES[(currentIndex + 1) % THEME_NAMES.length];
-    dispatch(setTheme(nextTheme));
-  }, [dispatch, themeName]);
+    setSettingsOpen(true);
+  }, []);
 
   const handleRestart = useCallback(async () => {
     const frame = game.frame;
@@ -136,7 +135,7 @@ export function GameDashboard() {
           color="secondary" 
           size="medium" 
           onClick={handleThemeSwitch} 
-          data-testid="theme-switch" 
+          data-testid="settings-button" 
           sx={{ 
             px: 3, 
             minHeight: 44, 
@@ -146,14 +145,14 @@ export function GameDashboard() {
             gap: 0.5,
           }}
         >
-          Schimbă tema
-          <span style={{ fontSize: '0.8rem', marginLeft: '4px' }}>▼</span>
+          ⚙️ Setări
         </Button>
       </Stack>
 
       <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Tema: {themeMeta.label}</Typography>
 
-      <SettingsPanel />
+      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+
       <LeaderboardPanel />
       <TestControls />
     </Stack>

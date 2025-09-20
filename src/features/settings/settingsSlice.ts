@@ -4,12 +4,16 @@ export interface SettingsState {
   volume: number; // 0..1
   muted: boolean;
   ghostPiece: boolean;
+  rightHanded: boolean; // true pentru dreptaci, false pentru stângaci
+  rotationDirection: 'CW' | 'CCW'; // direcția de rotație preferată
 }
 
 const initialState: SettingsState = {
   volume: 0.6,
   muted: false,
   ghostPiece: true,
+  rightHanded: true,
+  rotationDirection: 'CW',
 };
 
 export const settingsSlice = createSlice({
@@ -35,13 +39,27 @@ export const settingsSlice = createSlice({
         localStorage.setItem("settings.ghostPiece", String(state.ghostPiece));
       } catch {}
     },
+    setRightHanded(state, action: PayloadAction<boolean>) {
+      state.rightHanded = action.payload;
+      try {
+        localStorage.setItem("settings.rightHanded", String(state.rightHanded));
+      } catch {}
+    },
+    setRotationDirection(state, action: PayloadAction<'CW' | 'CCW'>) {
+      state.rotationDirection = action.payload;
+      try {
+        localStorage.setItem("settings.rotationDirection", action.payload);
+      } catch {}
+    },
   },
 });
 
-export const { setVolume, setMuted, setGhostPiece } = settingsSlice.actions;
+export const { setVolume, setMuted, setGhostPiece, setRightHanded, setRotationDirection } = settingsSlice.actions;
 export const settingsReducer = settingsSlice.reducer;
 
 export const selectSettings = (state: { settings: SettingsState }) => state.settings;
 export const selectVolume = (state: { settings: SettingsState }) => state.settings.volume;
 export const selectMuted = (state: { settings: SettingsState }) => state.settings.muted;
 export const selectGhostPiece = (state: { settings: SettingsState }) => state.settings.ghostPiece;
+export const selectRightHanded = (state: { settings: SettingsState }) => state.settings.rightHanded;
+export const selectRotationDirection = (state: { settings: SettingsState }) => state.settings.rotationDirection;

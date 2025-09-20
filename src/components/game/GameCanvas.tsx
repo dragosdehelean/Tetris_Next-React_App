@@ -80,8 +80,7 @@ export function GameCanvas() {
   const [cellSize, setCellSize] = useState<number>(28); // responsive
   const [isMobile, setIsMobile] = useState<boolean>(false);
   
-  // Mobile-optimized dimensions while keeping 20 rows
-  const baseCellSize = isMobile ? 25 : 28;
+  // Mobile-optimized padding
   const padding = isMobile ? 6 : 8;
 
   const width = useMemo(() => cols * cellSize + (isMobile ? 6 : 8) * 2, [cols, cellSize, isMobile]);
@@ -245,8 +244,7 @@ export function GameCanvas() {
       for (let x = 0; x < frame.board[y].length; x++) {
         const val = frame.board[y][x];
         if (!val) continue;
-        const currentPadding = isMobile ? 6 : 8;
-        drawCellByTheme(ctx, currentPadding + x * cellSize, currentPadding + y * cellSize, cellSize, COLORS[val], themeName, val);
+        drawCellByTheme(ctx, padding + x * cellSize, padding + y * cellSize, cellSize, COLORS[val], themeName, val);
       }
     }
 
@@ -255,10 +253,9 @@ export function GameCanvas() {
       const coords = getPieceCells(frame.activePiece);
       const ghost = getDroppedCoordinates(frame.board, coords);
       ctx.fillStyle = "rgba(255,255,255,0.15)";
-      const currentPadding = isMobile ? 6 : 8;
       for (const { x, y } of ghost) {
         if (y < 0) continue;
-        ctx.fillRect(currentPadding + x * cellSize + 1, currentPadding + y * cellSize + 1, cellSize - 2, cellSize - 2);
+        ctx.fillRect(padding + x * cellSize + 1, padding + y * cellSize + 1, cellSize - 2, cellSize - 2);
       }
     }
 
@@ -300,8 +297,7 @@ export function GameCanvas() {
           g.addColorStop(0, rgba(pal.primary, alpha));
           g.addColorStop(1, rgba(pal.secondary, alpha));
           ctx.fillStyle = g;
-          const currentPadding = isMobile ? 6 : 8;
-          ctx.fillRect(currentPadding, currentPadding, cols * cellSize, rows * cellSize);
+          ctx.fillRect(padding, padding, cols * cellSize, rows * cellSize);
         }
       }
     }
@@ -348,7 +344,7 @@ export function GameCanvas() {
       ctx.fill();
     }
     ctx.restore();
-  }, [frame, width, height, cols, rows, ghostEnabled, themeName, cellSize]);
+  }, [frame, width, height, cols, rows, ghostEnabled, themeName, cellSize, isMobile, padding]);
 
   return (
     <canvas
