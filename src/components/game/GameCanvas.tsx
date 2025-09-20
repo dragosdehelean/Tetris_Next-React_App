@@ -19,6 +19,7 @@ import { getPieceCells } from "@/features/game/engine/piece";
 import type { TetrominoType } from "@/features/game/engine/tetromino";
 import { getDroppedCoordinates } from "@/features/game/engine/board";
 import { GameVisualEffects } from "@/components/game/GameVisualEffects";
+import { audioManager } from "@/components/game/GameEffects";
 
 // Type for line-clear effect tracking
 interface LineClearTracker {
@@ -355,6 +356,24 @@ export function GameCanvas() {
         height={height}
         data-testid="game-canvas"
         style={{ display: "block", margin: "0 auto", borderRadius: 8 }}
+        onTouchStart={(e) => {
+          // Activate audio context on mobile touch
+          e.preventDefault();
+          if (typeof window !== 'undefined' && 'ontouchstart' in window) {
+            // Force enable audio context for mobile
+            audioManager.playSound('soft-drop', 0.1).catch(() => {
+              console.log('Audio activation attempted on mobile touch');
+            });
+          }
+        }}
+        onMouseDown={() => {
+          // Also handle mouse events for testing on desktop
+          if (typeof window !== 'undefined') {
+            audioManager.playSound('soft-drop', 0.1).catch(() => {
+              console.log('Audio activation attempted on mouse down');
+            });
+          }
+        }}
       />
       <GameVisualEffects canvasRef={canvasRef} />
     </>

@@ -48,10 +48,30 @@ class VisualEffectsManager {
   setCanvas(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
+    
+    if (this.ctx) {
+      // Set up canvas for better mobile rendering
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      
+      // Scale canvas for high DPI displays (mobile)
+      if (devicePixelRatio > 1) {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * devicePixelRatio;
+        canvas.height = rect.height * devicePixelRatio;
+        this.ctx.scale(devicePixelRatio, devicePixelRatio);
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = rect.height + 'px';
+      }
+      
+      console.log('Visual effects canvas initialized for mobile');
+    }
   }
 
   addScorePopup(points: number, type: ScorePopup['type'], linesCleared?: number) {
-    if (!this.canvas) return;
+    if (!this.canvas) {
+      console.warn('Canvas not available for visual effects');
+      return;
+    }
 
     const popup: ScorePopup = {
       id: `popup-${Date.now()}-${Math.random()}`,
@@ -65,6 +85,9 @@ class VisualEffectsManager {
 
     this.popups.push(popup);
     this.startAnimation();
+    
+    // Log for debugging on mobile
+    console.log(`Visual effect added: ${type} +${points} points`);
   }
 
   addScreenEffect(type: ScreenEffect['type'], duration: number, intensity: number = 1) {
@@ -104,7 +127,10 @@ class VisualEffectsManager {
 
   private startAnimation() {
     if (this.animationId !== null) return;
+    
+    // Use RAF with fallback for mobile
     this.animate();
+    console.log('Visual effects animation started');
   }
 
   private animate = () => {
@@ -115,6 +141,7 @@ class VisualEffectsManager {
       this.animationId = requestAnimationFrame(this.animate);
     } else {
       this.animationId = null;
+      console.log('Visual effects animation stopped');
     }
   };
 

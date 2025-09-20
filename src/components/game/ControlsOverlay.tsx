@@ -15,6 +15,7 @@ import {
   selectRightHanded,
   selectRotationDirection,
 } from "@/features/settings/settingsSlice";
+import { audioManager } from "@/components/game/GameEffects";
 
 export function ControlsOverlay() {
   const dispatch = useAppDispatch();
@@ -55,6 +56,16 @@ export function ControlsOverlay() {
     },
   };
 
+  // Funcție helper pentru activarea audio pe mobile
+  const handleMobileTouch = () => {
+    if (typeof window !== 'undefined' && 'ontouchstart' in window) {
+      // Activează audio context-ul la prima atingere pe mobil
+      audioManager.playSound('soft-drop', 0.05).catch(() => {
+        console.log('Audio activation attempted on mobile control touch');
+      });
+    }
+  };
+
   // Stiluri pentru butoanele de rotație
   const rotateButtonStyle = {
     ...moveButtonStyle,
@@ -87,6 +98,7 @@ export function ControlsOverlay() {
           <Button 
             variant="outlined"
             onClick={() => isRunning && dispatch(moveLeft())} 
+            onTouchStart={handleMobileTouch}
             aria-label="Mișcare stânga"
             disabled={!isRunning}
             sx={moveButtonStyle}
@@ -98,6 +110,7 @@ export function ControlsOverlay() {
           <Button 
             variant="outlined"
             onClick={() => isRunning && dispatch(rotateAction())} 
+            onTouchStart={handleMobileTouch}
             aria-label={rotateLabel}
             disabled={!isRunning}
             sx={{
@@ -113,6 +126,7 @@ export function ControlsOverlay() {
           <Button 
             variant="outlined"
             onClick={() => isRunning && dispatch(moveRight())} 
+            onTouchStart={handleMobileTouch}
             aria-label="Mișcare dreapta"
             disabled={!isRunning}
             sx={moveButtonStyle}
@@ -135,6 +149,7 @@ export function ControlsOverlay() {
               <Button
                 variant="contained"
                 onClick={() => isRunning && dispatch(hardDrop())}
+                onTouchStart={handleMobileTouch}
                 disabled={!isRunning}
                 aria-label="Coborâre instantanee"
                 sx={{
@@ -171,6 +186,7 @@ export function ControlsOverlay() {
               <Button 
                 variant="outlined"
                 onClick={() => isRunning && dispatch(softDrop())} 
+                onTouchStart={handleMobileTouch}
                 aria-label="Coborâre lentă"
                 disabled={!isRunning}
                 sx={{
@@ -188,6 +204,7 @@ export function ControlsOverlay() {
               <Button 
                 variant="outlined"
                 onClick={() => isRunning && dispatch(softDrop())} 
+                onTouchStart={handleMobileTouch}
                 aria-label="Coborâre lentă"
                 disabled={!isRunning}
                 sx={{
@@ -202,6 +219,7 @@ export function ControlsOverlay() {
               <Button
                 variant="contained"
                 onClick={() => isRunning && dispatch(hardDrop())}
+                onTouchStart={handleMobileTouch}
                 disabled={!isRunning}
                 aria-label="Coborâre instantanee"
                 sx={{

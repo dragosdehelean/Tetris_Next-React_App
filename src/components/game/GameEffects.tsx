@@ -11,17 +11,59 @@ class GameAudioManager {
   private volume = 0.7;
   private muted = false;
   private soundCache = new Map<string, AudioBuffer>();
+  private isInitialized = false;
+  private isUserInteracted = false;
 
   constructor() {
     if (typeof window !== "undefined") {
       this.initializeAudio();
+      // Listen for user interaction to enable audio on mobile
+      this.setupUserInteractionListener();
+    }
+  }
+
+  private setupUserInteractionListener() {
+    const enableAudio = async () => {
+      if (!this.isUserInteracted) {
+        this.isUserInteracted = true;
+        await this.resumeAudioContext();
+        // Remove listeners after first interaction
+        document.removeEventListener('touchstart', enableAudio);
+        document.removeEventListener('click', enableAudio);
+        document.removeEventListener('keydown', enableAudio);
+      }
+    };
+
+    // Listen for various user interactions
+    document.addEventListener('touchstart', enableAudio, { passive: true });
+    document.addEventListener('click', enableAudio);
+    document.addEventListener('keydown', enableAudio);
+  }
+
+  private async resumeAudioContext() {
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      try {
+        await this.audioContext.resume();
+        console.log('Audio context resumed for mobile');
+      } catch (error) {
+        console.warn('Failed to resume audio context:', error);
+      }
     }
   }
 
   private async initializeAudio() {
     try {
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // Use a more robust audio context creation
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) {
+        console.warn('Web Audio API not supported');
+        return;
+      }
+      
+      this.audioContext = new AudioContextClass();
       await this.loadSounds();
+      this.isInitialized = true;
+      console.log('Audio initialized successfully');
     } catch (error) {
       console.warn("Audio initialization failed:", error);
     }
@@ -120,13 +162,20 @@ class GameAudioManager {
     if (!this.audioContext || this.muted || this.volume === 0) return;
 
     try {
-      // Resume audio context if suspended (required by modern browsers)
-      if (this.audioContext.state === 'suspended') {
-        await this.audioContext.resume();
+      // Ensure audio context is ready and user has interacted
+      if (!this.isInitialized) {
+        console.warn('Audio not initialized');
+        return;
       }
 
+      // Resume audio context if suspended (required by modern browsers, especially mobile)
+      await this.resumeAudioContext();
+
       const buffer = this.soundCache.get(soundName);
-      if (!buffer) return;
+      if (!buffer) {
+        console.warn(`Sound buffer not found: ${soundName}`);
+        return;
+      }
 
       const source = this.audioContext.createBufferSource();
       const gainNode = this.audioContext.createGain();
@@ -138,6 +187,9 @@ class GameAudioManager {
       gainNode.connect(this.audioContext.destination);
       
       source.start();
+      
+      // Log successful sound play for debugging
+      console.log(`Playing sound: ${soundName} at volume ${this.volume * volumeMultiplier}`);
     } catch (error) {
       console.warn(`Failed to play sound ${soundName}:`, error);
     }
