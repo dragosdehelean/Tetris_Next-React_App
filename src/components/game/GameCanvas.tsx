@@ -81,10 +81,10 @@ export function GameCanvas() {
   const [isMobile, setIsMobile] = useState<boolean>(false);
   
   // Mobile-optimized padding
-  const padding = isMobile ? 6 : 8;
+  const padding = isMobile ? 4 : 8;
 
-  const width = useMemo(() => cols * cellSize + (isMobile ? 6 : 8) * 2, [cols, cellSize, isMobile]);
-  const height = useMemo(() => rows * cellSize + (isMobile ? 6 : 8) * 2, [rows, cellSize, isMobile]);
+  const width = useMemo(() => cols * cellSize + (isMobile ? 4 : 8) * 2, [cols, cellSize, isMobile]);
+  const height = useMemo(() => rows * cellSize + (isMobile ? 4 : 8) * 2, [rows, cellSize, isMobile]);
 
   const startLoop = useCallback(() => {
     if (rafRef.current) return;
@@ -129,9 +129,9 @@ export function GameCanvas() {
       const isMobileDevice = containerWidth < 600;
       setIsMobile(isMobileDevice);
       
-      const baseMaxCell = isMobileDevice ? 30 : 28;
-      const baseMinCell = isMobileDevice ? 25 : 22;
-      const currentPadding = isMobileDevice ? 6 : 8;
+      const baseMaxCell = isMobileDevice ? 26 : 28;
+      const baseMinCell = isMobileDevice ? 22 : 22;
+      const currentPadding = isMobileDevice ? 4 : 8;
       
       const maxCell = Math.min(baseMaxCell, Math.floor((containerWidth - currentPadding * 2) / cols));
       const next = Math.max(baseMinCell, maxCell);
