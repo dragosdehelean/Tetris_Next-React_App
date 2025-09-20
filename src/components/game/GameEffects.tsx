@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useAppSelector } from "@/features/store/hooks";
 import { selectFrame, selectGameState } from "@/features/game/gameSlice";
 import { selectVolume, selectMuted, selectEffectsIntensity } from "@/features/settings/settingsSlice";
@@ -54,7 +54,7 @@ class GameAudioManager {
   private async initializeAudio() {
     try {
       // Use a more robust audio context creation
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (!AudioContextClass) {
         console.warn('Web Audio API not supported');
         return;
@@ -284,7 +284,7 @@ export function GameEffects() {
     prevScoreRef.current = currentScore;
     prevLinesRef.current = currentLines;
     prevLevelRef.current = currentLevel;
-  }, [frame, game.status]);
+  }, [frame, game.status, effectsIntensity]);
 
   return null; // This component only handles audio effects
 }

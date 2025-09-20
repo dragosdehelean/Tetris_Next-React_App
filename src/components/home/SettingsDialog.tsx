@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -21,7 +20,6 @@ import {
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/features/store/hooks";
 import { 
-  selectSettings,
   selectVolume,
   selectMuted,
   selectGhostPiece,

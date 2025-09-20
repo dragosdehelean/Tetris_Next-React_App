@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useAppSelector } from "@/features/store/hooks";
 import { selectFrame, selectGameState } from "@/features/game/gameSlice";
 import { selectEffectsIntensity } from "@/features/settings/settingsSlice";
@@ -418,7 +418,7 @@ export function GameVisualEffects({ canvasRef }: { canvasRef: React.RefObject<HT
     prevScoreRef.current = currentScore;
     prevLinesRef.current = currentLines;
     prevLevelRef.current = currentLevel;
-  }, [frame, game.status]);
+  }, [frame, game.status, effectsIntensity]);
 
   return null; // This component only manages visual effects
 }

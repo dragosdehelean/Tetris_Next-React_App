@@ -1,9 +1,8 @@
 ﻿import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { GameDashboard } from "@/components/home/GameDashboard";
 import { pauseGame, startGame } from "@/features/game/gameSlice";
-import type { RootState } from "@/features/store/store";
 import { renderWithProviders } from "@/test/testUtils";
 
 describe("GameDashboard", () => {
