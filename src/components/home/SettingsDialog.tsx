@@ -25,11 +25,13 @@ import {
   selectGhostPiece,
   selectRightHanded,
   selectRotationDirection,
+  selectEffectsIntensity,
   setVolume,
   setMuted,
   setGhostPiece,
   setRightHanded,
   setRotationDirection,
+  setEffectsIntensity,
 } from "@/features/settings/settingsSlice";
 import {
   selectThemeName,
@@ -49,6 +51,7 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const ghostPiece = useAppSelector(selectGhostPiece);
   const rightHanded = useAppSelector(selectRightHanded);
   const rotationDirection = useAppSelector(selectRotationDirection);
+  const effectsIntensity = useAppSelector(selectEffectsIntensity);
   const themeName = useAppSelector(selectThemeName);
 
   const handleVolumeChange = (event: Event, newValue: number | number[]) => {
@@ -221,6 +224,44 @@ export default function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               label="Dezactivează sunetul"
               sx={{ color: 'white', mb: 2 }}
             />
+          </Box>
+
+          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+
+          {/* Setări efecte */}
+          <Box>
+            <Typography variant="h6" sx={{ mb: 2, color: 'primary.light' }}>
+              ✨ Efecte
+            </Typography>
+            
+            {/* Effects Intensity Slider */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                Intensitatea efectelor: {Math.round(effectsIntensity * 100)}%
+              </Typography>
+              <Slider
+                value={effectsIntensity}
+                onChange={(_, value) => dispatch(setEffectsIntensity(value as number))}
+                min={0}
+                max={1}
+                step={0.01}
+                sx={{
+                  color: 'primary.main',
+                  '& .MuiSlider-thumb': {
+                    backgroundColor: 'primary.main',
+                  },
+                  '& .MuiSlider-track': {
+                    backgroundColor: 'primary.main',
+                  },
+                  '& .MuiSlider-rail': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                  },
+                }}
+              />
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                Controlează intensitatea efectelor vizuale și sonore la câștigarea punctelor
+              </Typography>
+            </Box>
           </Box>
 
           <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />

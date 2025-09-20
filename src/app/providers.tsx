@@ -8,7 +8,7 @@ import { makeStore, type AppStore } from "@/features/store/store";
 import { useAppDispatch, useAppSelector } from "@/features/store/hooks";
 import { selectThemeName, setTheme } from "@/features/theme/themeSlice";
 import { DEFAULT_THEME, THEME_PALETTES, type ThemeName, isThemeName } from "@/features/theme/themeOptions";
-import { setGhostPiece, setMuted, setVolume, setRightHanded, setRotationDirection } from "@/features/settings/settingsSlice";
+import { setGhostPiece, setMuted, setVolume, setRightHanded, setRotationDirection, setEffectsIntensity } from "@/features/settings/settingsSlice";
 
 interface ProvidersProps {
   children: ReactNode;
@@ -158,6 +158,8 @@ function SettingsSynchronizer() {
       if (rh != null) dispatch(setRightHanded(rh === "true"));
       const rd = localStorage.getItem("settings.rotationDirection");
       if (rd != null && (rd === "CW" || rd === "CCW")) dispatch(setRotationDirection(rd));
+      const ei = localStorage.getItem("settings.effectsIntensity");
+      if (ei != null) dispatch(setEffectsIntensity(Math.max(0, Math.min(1, Number(ei)))));
     } catch {
       // ignore
     }

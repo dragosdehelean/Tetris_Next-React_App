@@ -18,6 +18,7 @@ import {
 import { getPieceCells } from "@/features/game/engine/piece";
 import type { TetrominoType } from "@/features/game/engine/tetromino";
 import { getDroppedCoordinates } from "@/features/game/engine/board";
+import { GameVisualEffects } from "@/components/game/GameVisualEffects";
 
 // Type for line-clear effect tracking
 interface LineClearTracker {
@@ -347,13 +348,16 @@ export function GameCanvas() {
   }, [frame, width, height, cols, rows, ghostEnabled, themeName, cellSize, isMobile, padding]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={width}
-      height={height}
-      data-testid="game-canvas"
-      style={{ display: "block", margin: "0 auto", borderRadius: 8 }}
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        width={width}
+        height={height}
+        data-testid="game-canvas"
+        style={{ display: "block", margin: "0 auto", borderRadius: 8 }}
+      />
+      <GameVisualEffects canvasRef={canvasRef} />
+    </>
   );
 }
 

@@ -19,6 +19,7 @@ import { LeaderboardPanel } from "@/components/game/LeaderboardPanel";
 import { TestControls } from "@/components/test/TestControls";
 import { InstructionsButton } from "@/components/game/InstructionsDialog";
 import { ControlsOverlay } from "@/components/game/ControlsOverlay";
+import { GameEffects } from "@/components/game/GameEffects";
 import SettingsDialog from "@/components/home/SettingsDialog";
 import { useAddScoreMutation } from "@/features/scores/localScoresApi";
 
@@ -155,6 +156,7 @@ export function GameDashboard() {
 
       <LeaderboardPanel />
       <TestControls />
+      <GameEffects />
     </Stack>
   );
 }
