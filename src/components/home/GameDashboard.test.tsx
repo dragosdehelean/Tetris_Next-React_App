@@ -57,7 +57,7 @@ describe("GameDashboard", () => {
     const currentTheme = store.getState().theme.current;
     
     // Verifică că tema este una validă
-    expect(['neon', 'cityscape', 'aurora']).toContain(currentTheme);
+    expect(['neon', 'cityscape', 'aurora', 'hypernova']).toContain(currentTheme);
   });
 });
 

@@ -15,30 +15,33 @@ test.describe("Home page", () => {
     // Click pe butonul de setări
     await page.getByTestId("settings-button").click();
 
+    const settingsDialog = page.getByRole("dialog");
+    await expect(settingsDialog).toBeVisible();
+    await expect(settingsDialog.getByRole("heading", { name: /⚙️ Setări/ })).toBeVisible();
+
     // Verifică că dialogul s-a deschis și conține toate secțiunile
-    await expect(page.getByText("⚙️ Setări")).toBeVisible();
-    await expect(page.getByText("🎮 Controale")).toBeVisible();
-    await expect(page.getByText("� Audio")).toBeVisible();
-    await expect(page.getByText("�👻 Vizuale")).toBeVisible();
-    await expect(page.getByText("🎨 Teme")).toBeVisible();
+    await expect(settingsDialog.getByText("🎮 Controale")).toBeVisible();
+    await expect(settingsDialog.getByText(/Audio/)).toBeVisible();
+    await expect(settingsDialog.getByText(/👻 Vizuale/)).toBeVisible();
+    await expect(settingsDialog.getByText("🎨 Teme")).toBeVisible();
 
     // Verifică setările pentru preferința de mână
-    await expect(page.getByText("Dreptaci (Hard Drop → Soft Drop)")).toBeVisible();
-    await expect(page.getByText("Stângaci (Soft Drop → Hard Drop)")).toBeVisible();
+    await expect(settingsDialog.getByText("Dreptaci (Hard Drop → Soft Drop)")).toBeVisible();
+    await expect(settingsDialog.getByText("Stângaci (Soft Drop → Hard Drop)")).toBeVisible();
 
     // Verifică opțiunile de rotație
-    await expect(page.getByText("⟳ Clockwise (în sensul acelor)")).toBeVisible();
-    await expect(page.getByText("⟲ Counter-Clockwise (invers acelor)")).toBeVisible();
+    await expect(settingsDialog.getByText("⟳ Clockwise (în sensul acelor)")).toBeVisible();
+    await expect(settingsDialog.getByText("⟲ Counter-Clockwise (invers acelor)")).toBeVisible();
 
     // Verifică setările audio
-    await expect(page.getByText("Volum:")).toBeVisible();
-    await expect(page.getByText("Dezactivează sunetul")).toBeVisible();
+    await expect(settingsDialog.getByText("Volum:")).toBeVisible();
+    await expect(settingsDialog.getByText("Dezactivează sunetul")).toBeVisible();
 
     // Verifică setările vizuale
-    await expect(page.getByText("Afișează piesa fantomă")).toBeVisible();
+    await expect(settingsDialog.getByText("Afișează piesa fantomă")).toBeVisible();
 
     // Închide dialogul
-    await page.getByRole("button", { name: "Close" }).click();
-    await expect(page.getByText("⚙️ Setări")).not.toBeVisible();
+    await settingsDialog.getByRole("button", { name: "✕" }).click();
+    await expect(settingsDialog).toBeHidden();
   });
 });

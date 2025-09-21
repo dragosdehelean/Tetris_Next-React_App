@@ -1,9 +1,10 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import type { Mock } from "vitest";
 import { render } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import React from "react";
-import { GameVisualEffects } from "./GameVisualEffects";
+import { GameVisualEffects, effectsManager } from "./GameVisualEffects";
 import { gameReducer, type GameState } from "@/features/game/gameSlice";
 import { settingsReducer, type SettingsState } from "@/features/settings/settingsSlice";
 import { themeReducer, type ThemeState } from "@/features/theme/themeSlice";
@@ -35,13 +36,6 @@ const mockContext = {
   filter: 'none',
 };
 
-const mockCanvas = {
-  getContext: vi.fn(() => mockContext),
-  width: 300,
-  height: 600,
-  style: {},
-};
-
 // Mock HTMLCanvasElement
 Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
   writable: true,
@@ -61,6 +55,10 @@ global.requestAnimationFrame = vi.fn((callback) => {
 });
 
 global.cancelAnimationFrame = vi.fn();
+
+type RequestFrameInspectable = {
+  requestFrame: (callback: FrameRequestCallback) => unknown;
+};
 
 const createTestStore = (initialState: {
   game?: Partial<GameState>;
@@ -127,14 +125,13 @@ const createTestStore = (initialState: {
 
 // Helper function to render GameVisualEffects with mock canvas ref
 const renderGameVisualEffects = (store: ReturnType<typeof createTestStore>) => {
-  const mockCanvasRef = React.createRef<HTMLCanvasElement>();
-  // Create a mock canvas element
+  // Create a mock canvas element + ref matching the component contract
   const mockCanvasElement = document.createElement('canvas');
   Object.defineProperty(mockCanvasElement, 'getContext', {
     value: vi.fn(() => mockContext),
     writable: true,
   });
-  (mockCanvasRef as any).current = mockCanvasElement;
+  const mockCanvasRef: React.RefObject<HTMLCanvasElement | null> = { current: mockCanvasElement };
 
   return render(
     <Provider store={store}>
@@ -147,9 +144,10 @@ describe('GameVisualEffects', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset context mocks
-    Object.keys(mockContext).forEach(key => {
-      if (typeof mockContext[key as keyof typeof mockContext] === 'function') {
-        (mockContext[key as keyof typeof mockContext] as any).mockClear();
+    Object.keys(mockContext).forEach((key) => {
+      const maybeFn = mockContext[key as keyof typeof mockContext];
+      if (typeof maybeFn === 'function') {
+        (maybeFn as Mock).mockClear();
       }
     });
   });
@@ -306,13 +304,22 @@ describe('GameVisualEffects', () => {
       },
     });
 
-    renderGameVisualEffects(store);
+    const requestFrameSpy = vi.spyOn(
+      effectsManager as unknown as RequestFrameInspectable,
+      "requestFrame",
+    );
 
-    // Wait for animation frame
-    await new Promise(resolve => setTimeout(resolve, 20));
+    try {
+      renderGameVisualEffects(store);
 
-    // Should use requestAnimationFrame for smooth animations
-    expect(global.requestAnimationFrame).toHaveBeenCalled();
+      // Wait for animation frame
+      await new Promise(resolve => setTimeout(resolve, 20));
+
+      // Should schedule via the requestFrame helper (RAF or fallback)
+      expect(requestFrameSpy).toHaveBeenCalled();
+    } finally {
+      requestFrameSpy.mockRestore();
+    }
   });
 });
 
@@ -353,13 +360,22 @@ describe('VisualEffectsManager', () => {
       },
     });
 
-    renderGameVisualEffects(store);
+    const requestFrameSpy = vi.spyOn(
+      effectsManager as unknown as RequestFrameInspectable,
+      "requestFrame",
+    );
 
-    // Wait for effects to be processed
-    await new Promise(resolve => setTimeout(resolve, 50));
+    try {
+      renderGameVisualEffects(store);
 
-    // Should handle multiple simultaneous effects
-    expect(global.requestAnimationFrame).toHaveBeenCalled();
+      // Wait for effects to be processed
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      // Should schedule via the helper even with many effects queued
+      expect(requestFrameSpy).toHaveBeenCalled();
+    } finally {
+      requestFrameSpy.mockRestore();
+    }
   });
 
   it('optimizes performance by limiting particle count', async () => {

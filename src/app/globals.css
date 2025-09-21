@@ -63,6 +63,24 @@
   --board-border-glow: rgba(96, 211, 148, 0.24);
 }
 
+[data-theme="hypernova"] {
+  --color-background: #090016;
+  --color-surface: #1b0433;
+  --color-primary: #f72585;
+  --color-secondary: #4cc9f0;
+  --color-text-primary: #fdf7ff;
+  --color-text-secondary: #f4b5ff;
+  --color-hero-gradient: radial-gradient(circle at 20% 20%, rgba(247, 37, 133, 0.24), transparent 55%),
+    radial-gradient(circle at 80% 10%, rgba(76, 201, 240, 0.18), transparent 60%),
+    linear-gradient(180deg, #050014 0%, #0b011e 70%, #000 100%);
+  --color-card-gradient: linear-gradient(140deg, rgba(247, 37, 133, 0.22), rgba(20, 8, 45, 0.78));
+  --color-panel-border: rgba(247, 37, 133, 0.38);
+  --color-card-shadow: rgba(76, 201, 240, 0.26);
+  --color-surface-overlay: rgba(19, 4, 39, 0.7);
+  --board-border-color: rgba(76, 201, 240, 0.42);
+  --board-border-glow: rgba(247, 37, 133, 0.34);
+}
+
 *,
 *::before,
 *::after {
@@ -85,4 +103,36 @@ a {
 
 button {
   font: inherit;
+}
+
+[data-theme="hypernova"] .MuiButton-contained {
+  background-image: linear-gradient(135deg, rgba(247, 37, 133, 0.95), rgba(255, 176, 0, 0.9));
+  border: 1px solid rgba(247, 37, 133, 0.6);
+  box-shadow:
+    0 0 20px rgba(247, 37, 133, 0.45),
+    0 0 40px rgba(76, 201, 240, 0.28);
+  color: #150417;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.45);
+  transition: transform 120ms ease, box-shadow 160ms ease;
+}
+
+[data-theme="hypernova"] .MuiButton-contained:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow:
+    0 0 28px rgba(247, 37, 133, 0.55),
+    0 0 54px rgba(76, 201, 240, 0.35);
+}
+
+[data-theme="hypernova"] .MuiButton-outlined {
+  border-color: rgba(76, 201, 240, 0.65);
+  color: #f4e6ff;
+  box-shadow: inset 0 0 0 1px rgba(247, 37, 133, 0.35), 0 0 16px rgba(76, 201, 240, 0.25);
+  background-image: radial-gradient(circle at top, rgba(247, 37, 133, 0.15), transparent 65%);
+  transition: transform 120ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+[data-theme="hypernova"] .MuiButton-outlined:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 176, 0, 0.65);
+  box-shadow: inset 0 0 0 1px rgba(255, 176, 0, 0.4), 0 0 22px rgba(76, 201, 240, 0.28);
 }

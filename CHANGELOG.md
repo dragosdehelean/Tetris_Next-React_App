@@ -1,5 +1,6 @@
 ## 2025-09-19
 
+- Introduced tema "Hypernova Surge" cu skin-uri cosmice pentru tetramino, butoane gradient și soundscape procedural cu efecte vizuale noi.
 - Mobile UX optimizations for Samsung Galaxy A55 (6.6", 1080x2340px):
   - Fixed HUD oval overflow with responsive margins (mx: { xs: 1, sm: 0 })
   - Compacted main action buttons with shortened text: "Start", "Restart", "Tema", "Instructiuni"
