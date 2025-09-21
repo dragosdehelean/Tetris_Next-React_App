@@ -60,6 +60,8 @@ function boardBgForTheme(theme: string): string {
       return "rgba(6, 29, 50, 0.6)";
     case "aurora":
       return "rgba(20, 26, 51, 0.62)";
+    case "hypernova":
+      return "rgba(12, 3, 28, 0.7)";
     case "neon":
     default:
       return "rgba(10, 4, 25, 0.6)";
@@ -74,7 +76,9 @@ export function GameCanvas() {
   const themeName = useAppSelector(selectThemeName);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const rafRef = useRef<number | null>(null);
+  const rafRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestFrame = useRef(resolveCanvasRequestFrame()).current;
+  const cancelFrame = useRef(resolveCanvasCancelFrame()).current;
   const lastTimeRef = useRef<number | null>(null);
 
   const cols = 10;
@@ -99,16 +103,16 @@ export function GameCanvas() {
       if (game.status === "running") {
         dispatch(tick({ elapsed }));
       }
-      rafRef.current = requestAnimationFrame(loop);
+      rafRef.current = requestFrame(loop);
     };
-    rafRef.current = requestAnimationFrame(loop);
-  }, [dispatch, game.status]);
+    rafRef.current = requestFrame(loop);
+  }, [dispatch, game.status, requestFrame]);
 
   const stopLoop = useCallback(() => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    if (rafRef.current) cancelFrame(rafRef.current);
     rafRef.current = null;
     lastTimeRef.current = null;
-  }, []);
+  }, [cancelFrame]);
 
   useEffect(() => {
     if (game.status === "running") {
@@ -404,7 +408,7 @@ function darken(hex: string, amount: number): string {
   return rgbToCss(f(r), f(g), f(b));
 }
 
-type ThemeSkin = "neon" | "cityscape" | "aurora";
+type ThemeSkin = "neon" | "cityscape" | "aurora" | "hypernova";
 
 function drawCellByTheme(
   ctx: CanvasRenderingContext2D,
@@ -432,7 +436,7 @@ function drawCellByTheme(
     return;
   }
 
-  if (theme === "cityscape" || theme === "aurora") {
+  if (theme === "cityscape" || theme === "aurora" || theme === "hypernova") {
     // Deterministic variant based on cell coords
     const cx = Math.floor(x / size);
     const cy = Math.floor(y / size);
@@ -442,6 +446,14 @@ function drawCellByTheme(
       const orient = seed % 3; // small orientation/variant tweaks
       const variant = motif * 10 + orient;
       const tile = getThemeTile("cityscape", s, colorHex, variant);
+      ctx.drawImage(tile, px, py);
+      return;
+    }
+    if (theme === "hypernova") {
+      const motif = hypernovaMotifForPiece(pieceType);
+      const orient = seed % 4; // rotation variations for cosmic streaks
+      const variant = motif * 10 + orient;
+      const tile = getThemeTile("hypernova", s, colorHex, variant);
       ctx.drawImage(tile, px, py);
       return;
     }
@@ -815,6 +827,203 @@ function getThemeTile(theme: ThemeSkin, size: number, colorHex: string, variant 
     cx.shadowBlur = 0;
 
     cx.restore();
+  } else if (theme === "hypernova") {
+    cx.save();
+    roundedRectPath(cx, 0.5, 0.5, size - 1, size - 1, Math.max(4, Math.floor(size * 0.28)));
+    cx.clip();
+
+    const pal = THEME_PALETTES.hypernova;
+
+    const base = cx.createLinearGradient(0, size, size, 0);
+    base.addColorStop(0, rgba("#120530", 0.95));
+    base.addColorStop(1, rgba(pal.surface, 0.92));
+    cx.fillStyle = base;
+    cx.fillRect(0, 0, size, size);
+
+    cx.globalCompositeOperation = "lighter";
+    cx.fillStyle = rgba(colorHex, 0.32);
+    cx.fillRect(0, 0, size, size);
+
+    const motif = Math.floor(variant / 10) % 10;
+    const orient = variant % 10;
+
+    cx.save();
+    cx.translate(size / 2, size / 2);
+    cx.rotate((orient - 1) * (Math.PI / 12));
+    cx.translate(-size / 2, -size / 2);
+
+    switch (motif) {
+      case 0: {
+        // Spiral galaxy arms
+        const arms = 3;
+        const swirl = cx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size * 0.65);
+        swirl.addColorStop(0, rgba("#fff8f5", 0.95));
+        swirl.addColorStop(0.35, rgba(pal.secondary, 0.75));
+        swirl.addColorStop(1, "rgba(0,0,0,0)");
+        cx.fillStyle = swirl;
+        for (let i = 0; i < arms; i++) {
+          cx.save();
+          cx.translate(size / 2, size / 2);
+          cx.rotate((Math.PI * 2 * i) / arms);
+          cx.beginPath();
+          cx.moveTo(0, 0);
+          cx.quadraticCurveTo(size * 0.34, -size * 0.12, size * 0.5, 0);
+          cx.quadraticCurveTo(size * 0.26, size * 0.18, 0, size * 0.24);
+          cx.closePath();
+          cx.fill();
+          cx.restore();
+        }
+        break;
+      }
+      case 1: {
+        // Solar flare burst
+        const flare = cx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size * 0.7);
+        flare.addColorStop(0, rgba("#fff0d6", 0.96));
+        flare.addColorStop(0.45, rgba("#ffb703", 0.82));
+        flare.addColorStop(1, rgba(pal.primary, 0.3));
+        cx.fillStyle = flare;
+        cx.fillRect(0, 0, size, size);
+
+        cx.strokeStyle = rgba(pal.secondary, 0.78);
+        cx.lineWidth = Math.max(2, Math.floor(size * 0.08));
+        const bursts = 4;
+        for (let i = 0; i < bursts; i++) {
+          cx.save();
+          cx.translate(size / 2, size / 2);
+          cx.rotate((Math.PI / 2) * i + (orient % 2) * (Math.PI / 8));
+          cx.beginPath();
+          cx.moveTo(0, 0);
+          cx.quadraticCurveTo(size * 0.28, -size * 0.06, size * 0.46, -size * 0.02);
+          cx.stroke();
+          cx.restore();
+        }
+        break;
+      }
+      case 2: {
+        // Hyperdrive streaks
+        const streakW = Math.max(3, Math.floor(size * 0.18));
+        for (let y = -streakW * 2; y < size + streakW * 2; y += streakW) {
+          const grad = cx.createLinearGradient(0, y, size, y + streakW);
+          grad.addColorStop(0, rgba(pal.secondary, 0.2));
+          grad.addColorStop(0.5, rgba("#ffffff", 0.85));
+          grad.addColorStop(1, rgba(pal.primary, 0.45));
+          cx.fillStyle = grad;
+          cx.beginPath();
+          cx.moveTo(-size * 0.2, y + streakW * 0.1);
+          cx.lineTo(size * 1.2, y + streakW * 0.35);
+          cx.lineTo(size * 1.2, y + streakW * 0.9);
+          cx.lineTo(-size * 0.2, y + streakW * 0.65);
+          cx.closePath();
+          cx.fill();
+        }
+        break;
+      }
+      case 3: {
+        // Reactor core
+        const core = cx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size * 0.45);
+        core.addColorStop(0, rgba("#fff0f6", 1));
+        core.addColorStop(0.5, rgba(pal.primary, 0.72));
+        core.addColorStop(1, rgba(pal.secondary, 0.12));
+        cx.fillStyle = core;
+        cx.beginPath();
+        cx.arc(size / 2, size / 2, size * 0.36, 0, Math.PI * 2);
+        cx.fill();
+
+        cx.lineWidth = 1.6;
+        cx.strokeStyle = rgba(pal.secondary, 0.72);
+        cx.beginPath();
+        cx.arc(size / 2, size / 2, size * 0.42, 0, Math.PI * 2);
+        cx.stroke();
+
+        cx.strokeStyle = rgba(pal.primary, 0.62);
+        cx.beginPath();
+        cx.moveTo(size * 0.2, size / 2);
+        cx.lineTo(size * 0.8, size / 2);
+        cx.moveTo(size / 2, size * 0.2);
+        cx.lineTo(size / 2, size * 0.8);
+        cx.stroke();
+        break;
+      }
+      case 4: {
+        // Star shards
+        cx.fillStyle = rgba("#ffffff", 0.85);
+        const shards: Array<[number, number, number, number]> = [
+          [size * 0.2, size * 0.26, size * 0.08, size * 0.24],
+          [size * 0.7, size * 0.22, size * 0.1, size * 0.28],
+          [size * 0.42, size * 0.7, size * 0.12, size * 0.32],
+        ];
+        for (const [sx, sy, w, h] of shards) {
+          cx.save();
+          cx.translate(sx, sy);
+          cx.rotate(((orient % 3) - 1) * (Math.PI / 10));
+          cx.beginPath();
+          cx.moveTo(0, 0);
+          cx.lineTo(w, -h * 0.4);
+          cx.lineTo(w * 0.3, h * 0.6);
+          cx.closePath();
+          cx.fill();
+          cx.restore();
+        }
+        break;
+      }
+      case 5: {
+        // Nebula ribbon
+        const ribbon = cx.createLinearGradient(0, size, size, 0);
+        ribbon.addColorStop(0, rgba(pal.primary, 0.1));
+        ribbon.addColorStop(0.45, rgba(pal.secondary, 0.4));
+        ribbon.addColorStop(1, rgba("#ffb703", 0.45));
+        cx.strokeStyle = ribbon;
+        cx.lineWidth = Math.max(3, Math.floor(size * 0.18));
+        cx.lineCap = "round";
+        cx.beginPath();
+        cx.moveTo(size * -0.1, size * 0.72);
+        cx.bezierCurveTo(size * 0.2, size * 0.35, size * 0.62, size * 0.82, size * 1.1, size * 0.32);
+        cx.stroke();
+        break;
+      }
+      case 6: {
+        // Plasma arcs
+        const arcs = 3;
+        for (let i = 0; i < arcs; i++) {
+          const radius = size * (0.26 + i * 0.08);
+          cx.strokeStyle = i % 2 === 0 ? rgba(pal.primary, 0.72) : rgba(pal.secondary, 0.62);
+          cx.lineWidth = Math.max(2, Math.floor(size * 0.08 - i * 0.02));
+          cx.beginPath();
+          cx.arc(size / 2, size / 2, radius, -Math.PI / 3, Math.PI / 3, false);
+          cx.stroke();
+        }
+        break;
+      }
+    }
+
+    cx.restore();
+
+    // Glints
+    cx.globalCompositeOperation = "lighter";
+    const glints: Array<[number, number, number]> = [
+      [size * 0.2, size * 0.22, size * 0.12],
+      [size * 0.78, size * 0.28, size * 0.1],
+      [size * 0.46, size * 0.78, size * 0.08],
+    ];
+    for (const [gx, gy, gr] of glints) {
+      const g = cx.createRadialGradient(gx, gy, 0, gx, gy, gr);
+      g.addColorStop(0, rgba("#ffffff", 0.9));
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      cx.fillStyle = g;
+      cx.beginPath();
+      cx.arc(gx, gy, gr, 0, Math.PI * 2);
+      cx.fill();
+    }
+
+    cx.globalCompositeOperation = "source-over";
+    const rim = cx.createLinearGradient(0, 0, size, size);
+    rim.addColorStop(0, rgba(pal.primary, 0.85));
+    rim.addColorStop(1, rgba(pal.secondary, 0.85));
+    cx.lineWidth = 1.2;
+    cx.strokeStyle = rim;
+    cx.strokeRect(0.6, 0.6, size - 1.2, size - 1.2);
+
+    cx.restore();
   } else if (theme === "aurora") {
     // Aurora motifs per piece: 0 pillars,1 comet,2 campfire,3 lantern,4 ribbons,5 horizon,6 crystals
     cx.save();
@@ -1083,6 +1292,30 @@ function roundedRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w:
   ctx.quadraticCurveTo(x, y, x + rr, y);
 }
 
+function resolveCanvasRequestFrame(): (callback: FrameRequestCallback) => ReturnType<typeof setTimeout> {
+  if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+    const raf = window.requestAnimationFrame.bind(window);
+    return (callback) => raf(callback) as unknown as ReturnType<typeof setTimeout>;
+  }
+  if (typeof globalThis.requestAnimationFrame === "function") {
+    const raf = globalThis.requestAnimationFrame.bind(globalThis);
+    return (callback) => raf(callback) as unknown as ReturnType<typeof setTimeout>;
+  }
+  return (callback) => setTimeout(() => callback(Date.now()), 16);
+}
+
+function resolveCanvasCancelFrame(): (handle: ReturnType<typeof setTimeout>) => void {
+  if (typeof window !== "undefined" && typeof window.cancelAnimationFrame === "function") {
+    const caf = window.cancelAnimationFrame.bind(window);
+    return (handle) => caf(handle as unknown as number);
+  }
+  if (typeof globalThis.cancelAnimationFrame === "function") {
+    const caf = globalThis.cancelAnimationFrame.bind(globalThis);
+    return (handle) => caf(handle as unknown as number);
+  }
+  return (handle) => clearTimeout(handle);
+}
+
 function boardBorderStyle(theme: ThemeName): { strokeA: string; strokeB: string; glow: string; crisp: string; dot: string; width: number } {
   const pal = THEME_PALETTES[theme] ?? THEME_PALETTES.neon;
   const a = pal.secondary; // accent
@@ -1142,5 +1375,26 @@ function auroraMotifForPiece(type?: TetrominoType): number {
       return 6; // crystal facets
     default:
       return 4;
+  }
+}
+
+function hypernovaMotifForPiece(type?: TetrominoType): number {
+  switch (type) {
+    case "I":
+      return 2; // hyperdrive streaks
+    case "J":
+      return 1; // solar flare
+    case "L":
+      return 6; // plasma arcs
+    case "O":
+      return 3; // reactor core
+    case "S":
+      return 5; // nebula ribbon
+    case "T":
+      return 0; // spiral galaxy
+    case "Z":
+      return 4; // star shards
+    default:
+      return 0;
   }
 }

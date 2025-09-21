@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 import { useAppSelector } from "@/features/store/hooks";
 import { selectFrame, selectGameState } from "@/features/game/gameSlice";
 import { selectEffectsIntensity } from "@/features/settings/settingsSlice";
+import { selectThemeName } from "@/features/theme/themeSlice";
+import { THEME_PALETTES, type ThemeName } from "@/features/theme/themeOptions";
 
 // Types for visual effects
 interface ScorePopup {
@@ -18,7 +20,7 @@ interface ScorePopup {
 
 interface ScreenEffect {
   id: string;
-  type: 'flash' | 'pulse' | 'shake' | 'rainbow';
+  type: 'flash' | 'pulse' | 'shake' | 'rainbow' | 'supernova';
   startTime: number;
   duration: number;
   intensity: number;
@@ -43,7 +45,15 @@ class VisualEffectsManager {
   private popups: ScorePopup[] = [];
   private screenEffects: ScreenEffect[] = [];
   private particles: ParticleEffect[] = [];
-  private animationId: number | null = null;
+  private animationId: ReturnType<typeof setTimeout> | null = null;
+  private theme: ThemeName = "neon";
+  private readonly raf: (callback: FrameRequestCallback) => ReturnType<typeof setTimeout>;
+  private readonly caf: (handle: ReturnType<typeof setTimeout>) => void;
+
+  constructor() {
+    this.raf = resolveRequestFrame();
+    this.caf = resolveCancelFrame();
+  }
 
   setCanvas(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -65,6 +75,10 @@ class VisualEffectsManager {
       
       console.log('Visual effects canvas initialized for mobile');
     }
+  }
+
+  setTheme(theme: ThemeName) {
+    this.theme = theme;
   }
 
   addScorePopup(points: number, type: ScorePopup['type'], linesCleared?: number) {
@@ -107,7 +121,7 @@ class VisualEffectsManager {
     for (let i = 0; i < count; i++) {
       const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
       const speed = 2 + Math.random() * 3;
-      
+
       const particle: ParticleEffect = {
         id: `particle-${Date.now()}-${i}`,
         x,
@@ -125,6 +139,26 @@ class VisualEffectsManager {
     this.startAnimation();
   }
 
+  private spawnHypernovaSparks(multiplier: number, major: boolean) {
+    if (!this.canvas) {
+      return;
+    }
+    const palette = THEME_PALETTES.hypernova;
+    const bursts = Math.max(4, Math.floor(8 * multiplier));
+    const width = this.canvas.width;
+    const height = this.canvas.height;
+    for (let i = 0; i < bursts; i++) {
+      const angle = ((i + 1) * 137.5 * Math.PI) / 180; // golden angle spread
+      const radius = Math.min(width, height) * (0.12 + (i / Math.max(1, bursts)) * 0.32);
+      const x = width / 2 + Math.cos(angle) * radius;
+      const y = height / 2 + Math.sin(angle) * radius * 0.6;
+      const color = major && i % 2 === 0
+        ? hexToRgbaCss(palette.primary, 0.9)
+        : hexToRgbaCss(palette.secondary, 0.75);
+      this.addParticles(x, y, 4 + (major ? 4 : 2), color);
+    }
+  }
+
   private startAnimation() {
     if (this.animationId !== null) return;
     
@@ -138,7 +172,7 @@ class VisualEffectsManager {
     this.render();
 
     if (this.popups.length > 0 || this.screenEffects.length > 0 || this.particles.length > 0) {
-      this.animationId = requestAnimationFrame(this.animate);
+      this.animationId = this.requestFrame(this.animate);
     } else {
       this.animationId = null;
       console.log('Visual effects animation stopped');
@@ -187,13 +221,13 @@ class VisualEffectsManager {
           this.ctx.fillStyle = `rgba(255, 255, 255, ${(1 - progress) * effect.intensity * 0.3})`;
           this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
           break;
-          
+
         case 'pulse':
           const pulse = Math.sin(progress * Math.PI * 4) * (1 - progress);
           this.ctx.fillStyle = `rgba(255, 255, 255, ${pulse * effect.intensity * 0.2})`;
           this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
           break;
-          
+
         case 'shake':
           const shake = (1 - progress) * effect.intensity * 5;
           this.ctx.translate(
@@ -201,14 +235,50 @@ class VisualEffectsManager {
             (Math.random() - 0.5) * shake
           );
           break;
-          
+
         case 'rainbow':
           const hue = (progress * 360) % 360;
           this.ctx.fillStyle = `hsla(${hue}, 70%, 70%, ${(1 - progress) * effect.intensity * 0.1})`;
           this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
           break;
+
+        case 'supernova': {
+          if (!this.canvas) break;
+          const width = this.canvas.width;
+          const height = this.canvas.height;
+          const centerX = width / 2;
+          const centerY = height / 2;
+          const radius = Math.max(width, height) * (0.45 + progress * 0.2);
+          const palette = THEME_PALETTES.hypernova;
+          const gradient = this.ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+          gradient.addColorStop(0, hexToRgbaCss('#ffffff', Math.min(0.45, 0.4 * (1 - progress) * effect.intensity)));
+          gradient.addColorStop(0.35, hexToRgbaCss(palette.primary, 0.35 * (1 - progress)));
+          gradient.addColorStop(1, hexToRgbaCss(palette.secondary, 0));
+          this.ctx.fillStyle = gradient;
+          this.ctx.fillRect(0, 0, width, height);
+
+          this.ctx.globalCompositeOperation = 'lighter';
+          const beamCount = 6;
+          for (let i = 0; i < beamCount; i++) {
+            const angle = (Math.PI * 2 * i) / beamCount + progress * Math.PI * 0.75;
+            const beamWidth = Math.max(2, Math.floor(Math.min(width, height) * 0.015));
+            this.ctx.save();
+            this.ctx.translate(centerX, centerY);
+            this.ctx.rotate(angle);
+            const length = Math.max(width, height) * (0.7 + 0.2 * (1 - progress));
+            const beamGrad = this.ctx.createLinearGradient(0, 0, length, 0);
+            beamGrad.addColorStop(0, hexToRgbaCss('#ffffff', 0.42 * (1 - progress)));
+            beamGrad.addColorStop(0.4, hexToRgbaCss(palette.secondary, 0.32 * (1 - progress)));
+            beamGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            this.ctx.fillStyle = beamGrad;
+            this.ctx.fillRect(0, -beamWidth, length, beamWidth * 2);
+            this.ctx.restore();
+          }
+          this.ctx.globalCompositeOperation = 'source-over';
+          break;
+        }
       }
-      
+
       this.ctx.restore();
     }
 
@@ -296,24 +366,33 @@ class VisualEffectsManager {
       case 'line-clear':
         this.addScreenEffect('flash', 300, intensity * 0.5);
         this.addScreenEffect('pulse', 500, intensity);
+        if (this.theme === 'hypernova') {
+          this.spawnHypernovaSparks(Math.max(0.6, intensity * 0.8), false);
+        }
         break;
-        
+
       case 'tetris':
         this.addScreenEffect('rainbow', 1000, intensity);
+        if (this.theme === 'hypernova') {
+          this.addScreenEffect('supernova', 1400, Math.max(1, intensity * 1.2));
+          this.spawnHypernovaSparks(Math.max(1.2, intensity * 1.6), true);
+        }
         this.addScreenEffect('shake', 500, intensity * 1.5);
         // Add celebratory particles
         if (this.canvas) {
           for (let i = 0; i < 20; i++) {
-            this.addParticles(
-              Math.random() * this.canvas.width,
-              Math.random() * this.canvas.height / 2,
-              3,
-              `hsl(${Math.random() * 360}, 70%, 60%)`
-            );
+            const px = Math.random() * this.canvas.width;
+            const py = (Math.random() * this.canvas.height) / 2;
+            const color = this.theme === 'hypernova'
+              ? (i % 2 === 0
+                ? hexToRgbaCss(THEME_PALETTES.hypernova.primary, 0.85)
+                : hexToRgbaCss(THEME_PALETTES.hypernova.secondary, 0.78))
+              : `hsl(${Math.random() * 360}, 70%, 60%)`;
+            this.addParticles(px, py, 3, color);
           }
         }
         break;
-        
+
       case 'level-up':
         this.addScreenEffect('pulse', 800, intensity);
         this.addScreenEffect('flash', 200, intensity * 0.7);
@@ -330,9 +409,17 @@ class VisualEffectsManager {
     this.screenEffects = [];
     this.particles = [];
     if (this.animationId !== null) {
-      cancelAnimationFrame(this.animationId);
+      this.cancelFrame(this.animationId);
       this.animationId = null;
     }
+  }
+
+  private requestFrame(callback: FrameRequestCallback): ReturnType<typeof setTimeout> {
+    return this.raf(callback);
+  }
+
+  private cancelFrame(handle: ReturnType<typeof setTimeout>) {
+    this.caf(handle);
   }
 }
 
@@ -343,6 +430,7 @@ export function GameVisualEffects({ canvasRef }: { canvasRef: React.RefObject<HT
   const frame = useAppSelector(selectFrame);
   const game = useAppSelector(selectGameState);
   const effectsIntensity = useAppSelector(selectEffectsIntensity);
+  const theme = useAppSelector(selectThemeName);
   
   const prevScoreRef = useRef<number>(0);
   const prevLinesRef = useRef<number>(0);
@@ -355,6 +443,10 @@ export function GameVisualEffects({ canvasRef }: { canvasRef: React.RefObject<HT
       effectsManager.setCanvas(canvasRef.current);
     }
   }, [canvasRef]);
+
+  useEffect(() => {
+    effectsManager.setTheme(theme);
+  }, [theme]);
 
   // Clear effects when game resets
   useEffect(() => {
@@ -421,6 +513,38 @@ export function GameVisualEffects({ canvasRef }: { canvasRef: React.RefObject<HT
   }, [frame, game.status, effectsIntensity]);
 
   return null; // This component only manages visual effects
+}
+
+function resolveRequestFrame(): (callback: FrameRequestCallback) => ReturnType<typeof setTimeout> {
+  if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+    const raf = window.requestAnimationFrame.bind(window);
+    return (callback) => raf(callback) as unknown as ReturnType<typeof setTimeout>;
+  }
+  if (typeof globalThis.requestAnimationFrame === "function") {
+    const raf = globalThis.requestAnimationFrame.bind(globalThis);
+    return (callback) => raf(callback) as unknown as ReturnType<typeof setTimeout>;
+  }
+  return (callback) => setTimeout(() => callback(Date.now()), 16);
+}
+
+function resolveCancelFrame(): (handle: ReturnType<typeof setTimeout>) => void {
+  if (typeof window !== "undefined" && typeof window.cancelAnimationFrame === "function") {
+    const caf = window.cancelAnimationFrame.bind(window);
+    return (handle) => caf(handle as unknown as number);
+  }
+  if (typeof globalThis.cancelAnimationFrame === "function") {
+    const caf = globalThis.cancelAnimationFrame.bind(globalThis);
+    return (handle) => caf(handle as unknown as number);
+  }
+  return (handle) => clearTimeout(handle);
+}
+
+function hexToRgbaCss(hex: string, alpha: number): string {
+  const normalized = hex.replace('#', '');
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 export { effectsManager };

@@ -1,4 +1,4 @@
-﻿export const THEME_NAMES = ["neon", "cityscape", "aurora"] as const;
+export const THEME_NAMES = ["neon", "cityscape", "aurora", "hypernova"] as const;
 
 export type ThemeName = (typeof THEME_NAMES)[number];
 
@@ -33,6 +33,11 @@ export const THEME_OPTIONS: ThemeOption[] = [
     label: "Aurora Borealis",
     description: "Verde polar cu accente violet pentru o atmosferă nordică.",
   },
+  {
+    id: "hypernova",
+    label: "Hypernova Surge",
+    description: "Energie cosmică cu roz incandescent, albastru stelar și accente aurii.",
+  },
 ];
 
 export const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
@@ -59,6 +64,14 @@ export const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
     surface: "#141a33",
     textPrimary: "#f1f5ff",
     textSecondary: "#bcd0d9",
+  },
+  hypernova: {
+    primary: "#f72585",
+    secondary: "#4cc9f0",
+    background: "#090016",
+    surface: "#1b0433",
+    textPrimary: "#fdf7ff",
+    textSecondary: "#f4b5ff",
   },
 };
 
